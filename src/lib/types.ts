@@ -120,6 +120,35 @@ export interface RotationRow {
   quantity_7d: number;
 }
 
+export interface CustomerStats {
+  total: number;
+  by_stage: Record<string, number>;
+  created_last_7_days: number;
+  total_credit_limit: number;
+}
+
+/**
+ * Vista compuesta del tablero que entrega el API Gateway.
+ *
+ * La PWA hace una sola peticion en lugar de siete: el gateway consulta los
+ * servicios en paralelo dentro de la red privada. Si alguna vista falla, llega
+ * en `unavailable` y el resto del tablero se muestra igual.
+ */
+export interface DashboardOverview {
+  summary: DashboardSummary;
+  sales_by_day: SalesByDay[];
+  top_products: TopProduct[];
+  payment_methods: PaymentMethodRow[];
+  recent_sales: RecentSale[];
+  rotation: RotationRow[];
+  customers: CustomerStats;
+}
+
+export interface OverviewResponse {
+  data: Partial<DashboardOverview>;
+  unavailable?: string[];
+}
+
 export interface ApiList<T> {
   data: T[];
   total: number;

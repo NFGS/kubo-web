@@ -16,23 +16,13 @@ import { CloudOff, Coins, Package, Receipt, TrendingUp, Users } from 'lucide-rea
 import { apiFetch } from '../lib/api';
 import { compactMoney, dateTime, money, number, paymentLabels, shortDate } from '../lib/format';
 import { useQueue } from '../lib/queue';
-import type {
-  ApiItem,
-  DashboardSummary,
-  PaymentMethodRow,
-  RecentSale,
-  RotationRow,
-  SalesByDay,
-  TopProduct
-} from '../lib/types';
+import type { OverviewResponse } from '../lib/types';
 import { Badge, Card, EmptyState, ErrorNote, Spinner } from '../components/ui';
 
 const PIE_COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
 
 interface TooltipEntry {
   value?: number | string;
-  name?: string | number;
-  dataKey?: string | number;
 }
 
 function ChartTooltip({
@@ -49,8 +39,7 @@ function ChartTooltip({
   if (!active || !payload || payload.length === 0) {
     return null;
   }
-  const first = payload[0];
-  const value = Number(first?.value ?? 0);
+  const value = Number(payload[0]?.value ?? 0);
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
       {label !== undefined && <p className="font-semibold text-slate-700">{shortDate(String(label))}</p>}
@@ -95,52 +84,35 @@ function Kpi({
 export function DashboardPage() {
   const { online } = useQueue();
 
-  const summary = useQuery({
-    queryKey: ['dashboard', 'summary'],
-    queryFn: () => apiFetch<ApiItem<DashboardSummary>>('/dashboard/summary')
-  });
-  const byDay = useQuery({
-    queryKey: ['dashboard', 'by-day'],
-    queryFn: () => apiFetch<ApiItem<SalesByDay[]>>('/dashboard/sales-by-day?days=14')
-  });
-  const topProducts = useQuery({
-    queryKey: ['dashboard', 'top-products'],
-    queryFn: () => apiFetch<ApiItem<TopProduct[]>>('/dashboard/top-products?limit=8')
-  });
-  const payments = useQuery({
-    queryKey: ['dashboard', 'payments'],
-    queryFn: () => apiFetch<ApiItem<PaymentMethodRow[]>>('/dashboard/payment-methods')
-  });
-  const recent = useQuery({
-    queryKey: ['dashboard', 'recent'],
-    queryFn: () => apiFetch<ApiItem<RecentSale[]>>('/dashboard/recent-sales?limit=8')
-  });
-  const rotation = useQuery({
-    queryKey: ['dashboard', 'rotation'],
-    queryFn: () => apiFetch<ApiItem<RotationRow[]>>('/dashboard/rotation')
-  });
-  const customers = useQuery({
-    queryKey: ['customers', 'stats'],
-    queryFn: () => apiFetch<ApiItem<{ total: number; by_stage: Record<string, number> }>>('/customers/stats')
+  // Una sola peticion: el gateway compone la vista consultando los servicios
+  // en paralelo. Antes eran siete viajes de red secuenciales.
+  const overview = useQuery({
+    queryKey: ['dashboard', 'overview'],
+    queryFn: () => apiFetch<OverviewResponse>('/dashboard/overview'),
+    refetchInterval: 60_000
   });
 
-  const data = summary.data?.data;
-  const salesSeries = byDay.data?.data ?? [];
-  const products = topProducts.data?.data ?? [];
-  const paymentRows = payments.data?.data ?? [];
-  const recentSales = recent.data?.data ?? [];
-  const rotationRows = rotation.data?.data ?? [];
+  const data = overview.data?.data;
+  const unavailable = overview.data?.unavailable ?? [];
 
-  if (summary.isLoading) {
+  const summary = data?.summary;
+  const salesSeries = data?.sales_by_day ?? [];
+  const products = data?.top_products ?? [];
+  const paymentRows = data?.payment_methods ?? [];
+  const recentSales = data?.recent_sales ?? [];
+  const rotationRows = data?.rotation ?? [];
+  const customerStats = data?.customers;
+
+  if (overview.isLoading) {
     return <Spinner label="Cargando el tablero…" />;
   }
 
-  if (summary.isError) {
+  if (overview.isError) {
     return (
       <ErrorNote
         message={
-          summary.error instanceof Error
-            ? summary.error.message
+          overview.error instanceof Error
+            ? overview.error.message
             : 'No fue posible cargar los indicadores'
         }
       />
@@ -156,34 +128,43 @@ export function DashboardPage() {
             Indicadores construidos a partir de los eventos de venta, en tiempo real.
           </p>
         </div>
-        {!online && <Badge tone="warning"><span className="inline-flex items-center gap-1"><CloudOff className="h-3.5 w-3.5" aria-hidden /> Mostrando datos guardados</span></Badge>}
+        <div className="flex items-center gap-2">
+          {!online && (
+            <Badge tone="warning">
+              <span className="inline-flex items-center gap-1">
+                <CloudOff className="h-3.5 w-3.5" aria-hidden /> Mostrando datos guardados
+              </span>
+            </Badge>
+          )}
+          {unavailable.length > 0 && <Badge tone="danger">Vistas sin datos: {unavailable.length}</Badge>}
+        </div>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           icon={TrendingUp}
           label="Ventas de hoy"
-          value={money(data?.today.revenue ?? 0)}
-          hint={`${number(data?.today.sales_count ?? 0)} transacciones`}
+          value={money(summary?.today.revenue ?? 0)}
+          hint={`${number(summary?.today.sales_count ?? 0)} transacciones`}
           tone="success"
         />
         <Kpi
           icon={Receipt}
           label="Ingreso acumulado"
-          value={money(data?.revenue ?? 0)}
-          hint={`${number(data?.sales_count ?? 0)} ventas registradas`}
+          value={money(summary?.revenue ?? 0)}
+          hint={`${number(summary?.sales_count ?? 0)} ventas registradas`}
         />
         <Kpi
           icon={Coins}
           label="Ticket promedio"
-          value={money(data?.avg_ticket ?? 0)}
-          hint={`IVA recaudado ${money(data?.tax ?? 0)}`}
+          value={money(summary?.avg_ticket ?? 0)}
+          hint={`IVA recaudado ${money(summary?.tax ?? 0)}`}
         />
         <Kpi
           icon={Package}
           label="Unidades vendidas"
-          value={number(data?.units_sold ?? 0)}
-          hint={`${number(data?.customers_count ?? 0)} clientes atendidos`}
+          value={number(summary?.units_sold ?? 0)}
+          hint={`${number(summary?.customers_count ?? 0)} clientes atendidos`}
         />
       </div>
 
@@ -351,28 +332,34 @@ export function DashboardPage() {
         </Card>
 
         <Card title="Cartera de clientes">
-          {customers.isLoading ? (
-            <Spinner label="Cargando clientes…" />
-          ) : (
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-slate-600">
-                  <Users className="h-4 w-4 text-slate-400" aria-hidden /> Total de clientes
-                </span>
-                <span className="text-lg font-semibold text-slate-900">
-                  {number(customers.data?.data.total ?? 0)}
-                </span>
-              </div>
-              {Object.entries(customers.data?.data.by_stage ?? {}).map(([stage, count]) => (
-                <div key={stage} className="flex items-center justify-between">
-                  <span className="text-slate-500">
-                    {stage === 'LEAD' ? 'Prospectos nuevos' : stage === 'PROSPECT' ? 'En negociación' : 'Clientes activos'}
-                  </span>
-                  <span className="font-semibold text-slate-700">{number(count)}</span>
-                </div>
-              ))}
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-slate-600">
+                <Users className="h-4 w-4 text-slate-400" aria-hidden /> Total de clientes
+              </span>
+              <span className="text-lg font-semibold text-slate-900">
+                {number(customerStats?.total ?? 0)}
+              </span>
             </div>
-          )}
+            {Object.entries(customerStats?.by_stage ?? {}).map(([stage, count]) => (
+              <div key={stage} className="flex items-center justify-between">
+                <span className="text-slate-500">
+                  {stage === 'LEAD'
+                    ? 'Prospectos nuevos'
+                    : stage === 'PROSPECT'
+                      ? 'En negociación'
+                      : 'Clientes activos'}
+                </span>
+                <span className="font-semibold text-slate-700">{number(count)}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+              <span className="text-slate-500">Nuevos esta semana</span>
+              <span className="font-semibold text-slate-700">
+                {number(customerStats?.created_last_7_days ?? 0)}
+              </span>
+            </div>
+          </div>
         </Card>
 
         <Card title="Cómo leer este tablero">
@@ -382,8 +369,8 @@ export function DashboardPage() {
               tengas que recargar ni exportar nada.
             </li>
             <li>
-              El ingreso acumulado usa el precio final con IVA incluido; el impuesto se muestra
-              aparte para tu contabilidad.
+              El día comercial se calcula en la zona horaria del negocio: una venta de las 20:00
+              cuenta en el día de hoy, no en el siguiente.
             </li>
             <li>
               Si el local se queda sin internet, el POS sigue vendiendo y el tablero muestra lo

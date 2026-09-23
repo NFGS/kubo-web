@@ -79,42 +79,49 @@ export function PosPage() {
     );
   }, [cart]);
 
+  // Las validaciones y los avisos viven FUERA de las funciones actualizadoras de
+  // estado: React puede invocarlas mas de una vez (StrictMode), y un efecto
+  // secundario ahi dentro duplicaria los avisos y romperia la pureza esperada.
   function addProduct(product: Product): void {
     setError(null);
-    setCart((current) => {
-      const existing = current.find((line) => line.product.id === product.id);
-      if (existing) {
-        if (existing.quantity >= product.stock) {
-          notify(`Solo hay ${product.stock} unidades de ${product.name}`, 'error');
-          return current;
-        }
-        return current.map((line) =>
+    const existing = cart.find((line) => line.product.id === product.id);
+
+    if (existing) {
+      if (existing.quantity >= product.stock) {
+        notify(`Solo hay ${product.stock} unidades de ${product.name}`, 'error');
+        return;
+      }
+      setCart((current) =>
+        current.map((line) =>
           line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line
-        );
-      }
-      if (product.stock <= 0) {
-        notify(`${product.name} no tiene existencias`, 'error');
-        return current;
-      }
-      return [...current, { product, quantity: 1 }];
-    });
+        )
+      );
+      return;
+    }
+
+    if (product.stock <= 0) {
+      notify(`${product.name} no tiene existencias`, 'error');
+      return;
+    }
+    setCart((current) => [...current, { product, quantity: 1 }]);
   }
 
   function changeQuantity(productId: string, delta: number): void {
+    const line = cart.find((row) => row.product.id === productId);
+    if (!line) {
+      return;
+    }
+
+    const next = line.quantity + delta;
+    if (next > line.product.stock) {
+      notify(`Stock disponible: ${line.product.stock}`, 'error');
+      return;
+    }
+
     setCart((current) =>
       current
-        .map((line) => {
-          if (line.product.id !== productId) {
-            return line;
-          }
-          const next = line.quantity + delta;
-          if (next > line.product.stock) {
-            notify(`Stock disponible: ${line.product.stock}`, 'error');
-            return line;
-          }
-          return { ...line, quantity: next };
-        })
-        .filter((line) => line.quantity > 0)
+        .map((row) => (row.product.id === productId ? { ...row, quantity: next } : row))
+        .filter((row) => row.quantity > 0)
     );
   }
 
