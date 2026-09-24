@@ -48,7 +48,9 @@ export function printReceipt(sale: Sale): void {
   <h1>Kubo</h1>
   <p class="sub">Comprobante de venta<br>${escapeHtml(sale.number)}<br>${escapeHtml(
     new Date(sale.created_at).toLocaleString('es-CO')
-  )}</p>
+  )}${
+    sale.table_number ? `<br>${escapeHtml(sale.table_number)}` : ''
+  }</p>
   <table>
     <thead>
       <tr><th>Producto</th><th class="num">Cant</th><th class="num">Vr. un</th><th class="num">Total</th></tr>

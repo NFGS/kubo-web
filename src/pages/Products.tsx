@@ -14,6 +14,7 @@ import {
 import { ApiError, apiFetch, downloadCsv } from '../lib/api';
 import { money, number } from '../lib/format';
 import { useToast } from '../components/Toaster';
+import { usePack } from '../lib/pack';
 import type { ApiItem, ApiList, Product } from '../lib/types';
 import { Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, Select, Spinner } from '../components/ui';
 
@@ -26,6 +27,7 @@ interface ProductForm {
   cost: string;
   tax_rate: string;
   min_stock: string;
+  tracks_stock: boolean;
   active: boolean;
 }
 
@@ -38,6 +40,7 @@ const emptyForm: ProductForm = {
   cost: '0',
   tax_rate: '19',
   min_stock: '0',
+  tracks_stock: true,
   active: true
 };
 
@@ -56,6 +59,7 @@ export function ProductsPage() {
   const [onlyLow, setOnlyLow] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const pack = usePack();
   const [modalOpen, setModalOpen] = useState(false);
   const [stockTarget, setStockTarget] = useState<Product | null>(null);
   const [stockForm, setStockForm] = useState<StockForm>(emptyStock);
@@ -115,7 +119,7 @@ export function ProductsPage() {
         price: Number(payload.price || '0'),
         cost: Number(payload.cost || '0'),
         tax_rate: Number(payload.tax_rate || '0'),
-        min_stock: Number(payload.min_stock || '0')
+        min_stock: payload.tracks_stock ? Number(payload.min_stock || '0') : 0
       });
       if (editing) {
         return apiFetch<ApiItem<Product>>(`/products/${editing.id}`, { method: 'PATCH', body });
@@ -198,7 +202,9 @@ export function ProductsPage() {
 
   function openCreate(): void {
     setEditing(null);
-    setForm(emptyForm);
+    // El paquete del negocio propone el valor (P-17): en servicios el catalogo
+    // nace sin inventario y el usuario puede cambiarlo.
+    setForm({ ...emptyForm, tracks_stock: pack.tracks_stock });
     setError(null);
     setModalOpen(true);
   }
@@ -214,6 +220,7 @@ export function ProductsPage() {
       cost: product.cost,
       tax_rate: product.tax_rate,
       min_stock: String(product.min_stock),
+      tracks_stock: product.tracks_stock,
       active: product.active
     });
     setError(null);
@@ -447,14 +454,25 @@ export function ProductsPage() {
                 onChange={(event) => setForm({ ...form, unit: event.target.value })}
               />
             </Field>
-            <Field label="Stock mínimo" hint="Dispara la alerta de reposición">
-              <Input
-                type="number"
-                min={0}
-                value={form.min_stock}
-                onChange={(event) => setForm({ ...form, min_stock: event.target.value })}
-              />
+            <Field label="Inventario" hint="Un servicio no descuenta existencias (P-17)">
+              <Select
+                value={form.tracks_stock ? 'true' : 'false'}
+                onChange={(event) => setForm({ ...form, tracks_stock: event.target.value === 'true' })}
+              >
+                <option value="true">Lleva inventario</option>
+                <option value="false">No lleva inventario (servicio)</option>
+              </Select>
             </Field>
+            {form.tracks_stock && (
+              <Field label="Stock mínimo" hint="Dispara la alerta de reposición">
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.min_stock}
+                  onChange={(event) => setForm({ ...form, min_stock: event.target.value })}
+                />
+              </Field>
+            )}
             <Field label="Estado">
               <Select
                 value={form.active ? 'true' : 'false'}

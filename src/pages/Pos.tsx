@@ -4,6 +4,7 @@ import { CloudOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from 'lu
 import { ApiError, apiFetch } from '../lib/api';
 import { money, number, paymentLabels } from '../lib/format';
 import { printReceipt } from '../lib/receipt';
+import { usePack } from '../lib/pack';
 import { useQueue } from '../lib/queue';
 import { useToast } from '../components/Toaster';
 import type { ApiItem, ApiList, Customer, NewSalePayload, Product, Sale } from '../lib/types';
@@ -18,11 +19,13 @@ export function PosPage() {
   const queryClient = useQueryClient();
   const { notify } = useToast();
   const { online, pending, enqueue } = useQueue();
+  const pack = usePack();
   const [term, setTerm] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerId, setCustomerId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [notes, setNotes] = useState('');
+  const [tableNumber, setTableNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
 
@@ -44,6 +47,7 @@ export function PosPage() {
       notify(`Venta ${response.data.number} registrada`, 'success');
       setCart([]);
       setNotes('');
+      setTableNumber('');
       setCustomerId('');
       await queryClient.invalidateQueries();
     },
@@ -88,7 +92,7 @@ export function PosPage() {
     const existing = cart.find((line) => line.product.id === product.id);
 
     if (existing) {
-      if (existing.quantity >= product.stock) {
+      if (product.tracks_stock && existing.quantity >= product.stock) {
         notify(`Solo hay ${product.stock} unidades de ${product.name}`, 'error');
         return;
       }
@@ -100,7 +104,7 @@ export function PosPage() {
       return;
     }
 
-    if (product.stock <= 0) {
+    if (product.tracks_stock && product.stock <= 0) {
       notify(`${product.name} no tiene existencias`, 'error');
       return;
     }
@@ -114,7 +118,7 @@ export function PosPage() {
     }
 
     const next = line.quantity + delta;
-    if (next > line.product.stock) {
+    if (line.product.tracks_stock && next > line.product.stock) {
       notify(`Stock disponible: ${line.product.stock}`, 'error');
       return;
     }
@@ -138,7 +142,8 @@ export function PosPage() {
       customer_id: customer?.id,
       customer_name: customer?.name,
       payment_method: paymentMethod,
-      notes: notes.trim() ? notes.trim() : undefined
+      notes: notes.trim() ? notes.trim() : undefined,
+      table_number: pack.pos_flow === 'table' && tableNumber.trim() ? tableNumber.trim() : undefined
     };
 
     const label = `${cart.length} producto(s) · ${money(totals.total)}`;
@@ -314,6 +319,16 @@ export function PosPage() {
                 <option value="CREDIT">Crédito</option>
               </Select>
             </Field>
+
+            {pack.pos_flow === 'table' && (
+              <Field label="Mesa" hint="Mesa o cuenta que atiende esta venta">
+                <Input
+                  value={tableNumber}
+                  onChange={(event) => setTableNumber(event.target.value)}
+                  placeholder="Mesa 4"
+                />
+              </Field>
+            )}
 
             <Field label="Notas">
               <Input value={notes} onChange={(event) => setNotes(event.target.value)} />

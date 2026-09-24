@@ -30,6 +30,8 @@ export interface Product {
   tax_rate: string;
   stock: number;
   min_stock: number;
+  /** Un servicio no lleva inventario (P-17): su venta no mueve kardex. */
+  tracks_stock: boolean;
   low_stock: boolean;
   active: boolean;
   created_at: string;
@@ -73,6 +75,8 @@ export interface Sale {
   tax: string;
   total: string;
   notes: string | null;
+  /** Mesa o cuenta del flujo de restaurante (P-17). */
+  table_number: string | null;
   sold_by: string | null;
   voided_at: string | null;
   created_at: string;
@@ -240,6 +244,7 @@ export interface NewSalePayload {
   customer_name?: string;
   payment_method: string;
   notes?: string;
+  table_number?: string;
 }
 
 export interface PendingSale {
