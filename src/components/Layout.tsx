@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Settings,
   ShoppingCart,
+  Warehouse,
   Truck,
   Users,
   Wallet,
@@ -31,6 +32,7 @@ export function Layout() {
     { to: '/productos', label: pack.product_label_plural, icon: Package },
     { to: '/compras', label: 'Compras', icon: Truck },
     { to: '/caja', label: 'Caja', icon: Wallet },
+    { to: '/bodegas', label: 'Bodegas', icon: Warehouse },
     { to: '/usuarios', label: 'Usuarios', icon: Users },
     { to: '/clientes', label: 'Clientes', icon: Users },
     { to: '/configuracion', label: 'Configuración', icon: Settings }

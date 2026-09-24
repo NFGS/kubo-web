@@ -13,6 +13,7 @@ import { PurchasesPage } from './pages/Purchases';
 import { ResetPage } from './pages/Reset';
 import { SettingsPage } from './pages/Settings';
 import { UsersPage } from './pages/Users';
+import { WarehousesPage } from './pages/Warehouses';
 
 function ProtectedArea() {
   const { user, ready } = useAuth();
@@ -50,6 +51,7 @@ export function App() {
         <Route path="/usuarios" element={<UsersPage />} />
         <Route path="/clientes" element={<CustomersPage />} />
         <Route path="/configuracion" element={<SettingsPage />} />
+        <Route path="/bodegas" element={<WarehousesPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/tablero" replace />} />
     </Routes>

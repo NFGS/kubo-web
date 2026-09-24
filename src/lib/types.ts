@@ -288,3 +288,30 @@ export interface Tenant {
   timezone: string;
   vertical: string;
 }
+
+/** Bodega o local donde hay existencia (P-22). */
+export interface Warehouse {
+  id: string;
+  name: string;
+  address: string | null;
+  is_default: boolean;
+  active: boolean;
+  created_at: string | null;
+}
+
+export interface TransferLine {
+  product_id: string;
+  quantity: number;
+}
+
+/** Transferencia entre bodegas (P-22). */
+export interface Transfer {
+  id: string;
+  from_warehouse_id: string;
+  to_warehouse_id: string;
+  status: string;
+  notes: string | null;
+  completed_at: string | null;
+  created_at: string | null;
+  items: TransferLine[];
+}
