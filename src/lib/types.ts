@@ -253,6 +253,8 @@ export interface NewSaleItem {
 
 export interface NewSalePayload {
   items: NewSaleItem[];
+  /** Bodega que despacha la venta (P-22); sin ella, la por defecto. */
+  warehouse_id?: string;
   customer_id?: string;
   customer_name?: string;
   payment_method: string;
@@ -314,4 +316,18 @@ export interface Transfer {
   completed_at: string | null;
   created_at: string | null;
   items: TransferLine[];
+}
+
+/** Aviso del buzon de notificaciones (P-19). */
+export interface AppNotification {
+  id: string;
+  kind: string;
+  channel: string;
+  subject: string;
+  body: string;
+  status: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  sent_at: string | null;
+  created_at: string | null;
 }

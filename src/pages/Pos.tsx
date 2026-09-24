@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CloudOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
@@ -7,7 +7,15 @@ import { printReceipt } from '../lib/receipt';
 import { usePack } from '../lib/pack';
 import { useQueue } from '../lib/queue';
 import { useToast } from '../components/Toaster';
-import type { ApiItem, ApiList, Customer, NewSalePayload, Product, Sale } from '../lib/types';
+import type {
+  ApiItem,
+  ApiList,
+  Customer,
+  NewSalePayload,
+  Product,
+  Sale,
+  Warehouse
+} from '../lib/types';
 import { Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Select, Spinner } from '../components/ui';
 
 interface CartLine {
@@ -26,12 +34,18 @@ export function PosPage() {
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [notes, setNotes] = useState('');
   const [tableNumber, setTableNumber] = useState('');
+  const [warehouseId, setWarehouseId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
 
   const products = useQuery({
     queryKey: ['products', 'pos'],
     queryFn: () => apiFetch<ApiList<Product>>('/products')
+  });
+
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'pos'],
+    queryFn: () => apiFetch<{ data: Warehouse[] }>('/warehouses')
   });
 
   const customers = useQuery({
@@ -49,12 +63,28 @@ export function PosPage() {
       setNotes('');
       setTableNumber('');
       setCustomerId('');
+      setWarehouseId('');
       await queryClient.invalidateQueries();
     },
     onError: (caught) => {
       setError(caught instanceof ApiError ? caught.message : 'No fue posible registrar la venta');
     }
   });
+
+  const bodegas = useMemo(() => {
+    const lista = warehouses.data?.data ?? [];
+    const porDefecto = lista.find((warehouse) => warehouse.is_default);
+    // La bodega por defecto va primera y preseleccionada (P-22).
+    return porDefecto ? [porDefecto, ...lista.filter((row) => !row.is_default)] : lista;
+  }, [warehouses.data]);
+
+  // La bodega por defecto queda preseleccionada: el estado debe reflejar lo que
+  // se ve en pantalla.
+  useEffect(() => {
+    if (!warehouseId && bodegas.length > 0) {
+      setWarehouseId(bodegas[0].id);
+    }
+  }, [bodegas, warehouseId]);
 
   const filtered = useMemo(() => {
     const rows = products.data?.data ?? [];
@@ -143,7 +173,8 @@ export function PosPage() {
       customer_name: customer?.name,
       payment_method: paymentMethod,
       notes: notes.trim() ? notes.trim() : undefined,
-      table_number: pack.pos_flow === 'table' && tableNumber.trim() ? tableNumber.trim() : undefined
+      table_number: pack.pos_flow === 'table' && tableNumber.trim() ? tableNumber.trim() : undefined,
+      warehouse_id: warehouseId || undefined
     };
 
     const label = `${cart.length} producto(s) · ${money(totals.total)}`;
@@ -319,6 +350,22 @@ export function PosPage() {
                 <option value="CREDIT">Crédito</option>
               </Select>
             </Field>
+
+            {bodegas.length > 1 && (
+              <Field label="Bodega" hint="Desde dónde sale la mercancía">
+                <Select
+                  value={warehouseId}
+                  onChange={(event) => setWarehouseId(event.target.value)}
+                >
+                  {bodegas.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                      {warehouse.is_default ? ' (por defecto)' : ''}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
 
             {pack.pos_flow === 'table' && (
               <Field label="Mesa" hint="Mesa o cuenta que atiende esta venta">

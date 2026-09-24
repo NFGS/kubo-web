@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import {
+  BellRing,
   CloudOff,
   LayoutDashboard,
   LogOut,
@@ -33,6 +34,7 @@ export function Layout() {
     { to: '/compras', label: 'Compras', icon: Truck },
     { to: '/caja', label: 'Caja', icon: Wallet },
     { to: '/bodegas', label: 'Bodegas', icon: Warehouse },
+    { to: '/notificaciones', label: 'Notificaciones', icon: BellRing },
     { to: '/usuarios', label: 'Usuarios', icon: Users },
     { to: '/clientes', label: 'Clientes', icon: Users },
     { to: '/configuracion', label: 'Configuración', icon: Settings }

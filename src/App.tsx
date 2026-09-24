@@ -7,6 +7,7 @@ import { CashPage } from './pages/Cash';
 import { CustomersPage } from './pages/Customers';
 import { DashboardPage } from './pages/Dashboard';
 import { LoginPage } from './pages/Login';
+import { NotificationsPage } from './pages/Notifications';
 import { PosPage } from './pages/Pos';
 import { ProductsPage } from './pages/Products';
 import { PurchasesPage } from './pages/Purchases';
@@ -52,6 +53,7 @@ export function App() {
         <Route path="/clientes" element={<CustomersPage />} />
         <Route path="/configuracion" element={<SettingsPage />} />
         <Route path="/bodegas" element={<WarehousesPage />} />
+        <Route path="/notificaciones" element={<NotificationsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/tablero" replace />} />
     </Routes>
