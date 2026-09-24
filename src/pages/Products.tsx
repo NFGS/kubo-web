@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Boxes, PackagePlus, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Boxes, PackagePlus, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
 import { money, number } from '../lib/format';
 import { useToast } from '../components/Toaster';
@@ -50,6 +50,13 @@ export function ProductsPage() {
   const [stockTarget, setStockTarget] = useState<Product | null>(null);
   const [stockForm, setStockForm] = useState<StockForm>(emptyStock);
   const [error, setError] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [csvText, setCsvText] = useState('');
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    updated: number;
+    errors: { line: number; message: string }[];
+  } | null>(null);
 
   const query = new URLSearchParams();
   if (term.trim()) query.set('q', term.trim());
@@ -130,6 +137,26 @@ export function ProductsPage() {
     }
   });
 
+  const importProducts = useMutation({
+    mutationFn: () =>
+      apiFetch<{ data: { created: number; updated: number; errors: { line: number; message: string }[] } }>(
+        '/products/import',
+        { method: 'POST', body: JSON.stringify({ csv: csvText }) }
+      ),
+    onSuccess: async (response) => {
+      setImportResult(response.data);
+      notify(
+        `Importación: ${response.data.created} creado(s), ${response.data.updated} actualizado(s)`,
+        response.data.errors.length === 0 ? 'success' : 'error'
+      );
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (caught) => {
+      setError(caught instanceof ApiError ? caught.message : 'No fue posible importar el archivo');
+    }
+  });
+
   const remove = useMutation({
     mutationFn: (id: string) => apiFetch<void>(`/products/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
@@ -186,10 +213,24 @@ export function ProductsPage() {
             {money(summary?.inventory_value ?? 0)}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <PackagePlus className="h-4 w-4" aria-hidden />
-          Nuevo producto
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setCsvText('');
+              setImportResult(null);
+              setError(null);
+              setImportOpen(true);
+            }}
+          >
+            <Upload className="h-4 w-4" aria-hidden />
+            Importar CSV
+          </Button>
+          <Button onClick={openCreate}>
+            <PackagePlus className="h-4 w-4" aria-hidden />
+            Nuevo producto
+          </Button>
+        </div>
       </header>
 
       {lowStockCount > 0 && (
@@ -414,6 +455,77 @@ export function ProductsPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={importOpen} onClose={() => setImportOpen(false)} title="Importar catálogo (CSV)">
+        <div className="space-y-4">
+          <ErrorNote message={error} />
+
+          <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs text-slate-600">
+            Columnas: <code>sku</code>, <code>nombre</code>, <code>precio</code>, <code>costo</code>,{' '}
+            <code>stock</code>, <code>stock_minimo</code>, <code>iva</code>. Si el SKU ya existe se
+            actualiza; el stock entra por el kardex. Excel puede exportar CSV (también se acepta punto
+            y coma).
+          </p>
+
+          <Field label="Archivo CSV">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              aria-label="Archivo CSV"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  setCsvText(await file.text());
+                }
+              }}
+              className="block w-full text-sm text-slate-600"
+            />
+          </Field>
+
+          <Field label="Contenido" hint="También puedes pegar el texto directamente">
+            <textarea
+              rows={6}
+              value={csvText}
+              onChange={(event) => setCsvText(event.target.value)}
+              placeholder={'sku,nombre,precio,costo,stock\n7702001,Chocolate 100 g,4500,3000,20'}
+              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 font-mono text-xs text-slate-900 focus:border-kubo-500 focus:ring-2 focus:ring-kubo-100 focus:outline-none"
+            />
+          </Field>
+
+          {importResult && (
+            <div className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm text-slate-700">
+              <p>
+                <strong>{importResult.created}</strong> creado(s) · <strong>{importResult.updated}</strong>{' '}
+                actualizado(s)
+                {importResult.errors.length > 0 ? ` · ${importResult.errors.length} con error` : ''}
+              </p>
+              {importResult.errors.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 text-xs text-rose-700">
+                  {importResult.errors.slice(0, 8).map((item) => (
+                    <li key={item.line}>
+                      línea {item.line}: {item.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setImportOpen(false)}>
+              Cerrar
+            </Button>
+            <Button
+              type="button"
+              loading={importProducts.isPending}
+              disabled={csvText.trim() === ''}
+              onClick={() => importProducts.mutate()}
+            >
+              Importar
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <Modal
