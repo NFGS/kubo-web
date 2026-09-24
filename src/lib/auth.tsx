@@ -8,6 +8,7 @@ import {
   type ReactNode
 } from 'react';
 import { apiFetch, logout as apiLogout, purgeCaches, refreshSession, setUnauthorizedHandler } from './api';
+import { queryClient } from './query';
 import type { User } from './types';
 
 interface AuthState {
@@ -23,13 +24,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
-  const signIn = useCallback((nextUser: User) => {
+  // En un equipo compartido, la cache del service worker y la de consultas no
+  // pueden sobrevivir a un cambio de usuario: al entrar y al salir se limpian
+  // (P-12). Es la garantia de que el vendedor siguiente no vea datos del anterior.
+  const signIn = useCallback(async (nextUser: User) => {
+    await purgeCaches();
+    queryClient.clear();
     setUser(nextUser);
   }, []);
 
   const signOut = useCallback(async () => {
     await apiLogout();
     await purgeCaches();
+    queryClient.clear();
     setUser(null);
   }, []);
 

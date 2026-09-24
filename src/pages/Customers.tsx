@@ -138,7 +138,7 @@ export function CustomersPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {number(total)} registros · el documento y el teléfono se guardan cifrados
           </p>
         </div>
@@ -161,6 +161,7 @@ export function CustomersPage() {
           </div>
           <Select
             className="max-w-52"
+            aria-label="Filtrar por etapa"
             value={stage}
             onChange={(event) => setStage(event.target.value)}
           >
@@ -200,14 +201,14 @@ export function CustomersPage() {
                   <tr key={customer.id} className="hover:bg-slate-50">
                     <td className="py-3">
                       <p className="font-medium text-slate-800">{customer.name}</p>
-                      <p className="text-xs text-slate-400">{customer.city ?? 'Sin ciudad'}</p>
+                      <p className="text-xs text-slate-600">{customer.city ?? 'Sin ciudad'}</p>
                     </td>
                     <td className="py-3 font-mono text-xs text-slate-500">
                       {customer.document_number ?? '—'}
                     </td>
                     <td className="py-3 text-slate-600">
                       <p>{customer.phone ?? '—'}</p>
-                      <p className="text-xs text-slate-400">{customer.email ?? 'sin correo'}</p>
+                      <p className="text-xs text-slate-600">{customer.email ?? 'sin correo'}</p>
                     </td>
                     <td className="py-3">
                       <Badge tone={stageTone[customer.stage]}>{stageLabels[customer.stage]}</Badge>

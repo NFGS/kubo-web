@@ -1,0 +1,35 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+stages: [test]
+
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+web:test:
+  stage: test
+  image: node:22
+  cache:
+    key: web-npm
+    paths: [.npm]
+  script:
+    - npm ci
+    - npm run typecheck
+    - npm run build
+
+# E2E + accesibilidad contra un entorno levantado. Se dispara cuando existe
+# KUBO_WEB_URL; en local lo cubre `make e2e`.
+web:e2e:
+  stage: test
+  image: node:22
+  rules:
+    - if: $KUBO_WEB_URL
+      when: manual
+  variables:
+    PLAYWRIGHT_CHANNEL: chromium
+  script:
+    - npm ci
+    - npx playwright install --with-deps chromium
+    - npx playwright test

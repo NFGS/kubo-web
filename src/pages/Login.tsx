@@ -29,7 +29,7 @@ export function LoginPage() {
     setError(null);
     try {
       const session = await login(email.trim(), password);
-      signIn(session.user);
+      await signIn(session.user);
     } catch (caught) {
       setError(
         caught instanceof ApiError ? caught.message : 'No fue posible conectar con el servidor'
@@ -70,7 +70,7 @@ export function LoginPage() {
           </ul>
         </div>
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-400">
           Armenia, Quindío · Software autoalojable con licencia MIT
         </p>
       </section>

@@ -2,6 +2,11 @@ node_modules/
 dist/
 dev-dist/
 coverage/
+
+# Artefactos de Playwright (capturas y reportes de las corridas E2E)
+test-results/
+playwright-report/
+blob-report/
 .env
 .env.local
 *.log

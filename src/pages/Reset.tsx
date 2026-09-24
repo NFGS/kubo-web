@@ -58,7 +58,7 @@ export function ResetPage() {
           <h2 className="text-2xl font-semibold text-slate-900">
             {token ? 'Elige tu nueva contraseña' : 'Recupera tu acceso'}
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {token
               ? 'El enlace es de un solo uso y vence en minutos.'
               : 'Te enviaremos un enlace al correo registrado.'}

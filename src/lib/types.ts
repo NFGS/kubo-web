@@ -152,7 +152,10 @@ export interface OverviewResponse {
 
 export interface ApiList<T> {
   data: T[];
+  /** Total real en el servidor (no el de la pagina). */
   total: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ApiItem<T> {

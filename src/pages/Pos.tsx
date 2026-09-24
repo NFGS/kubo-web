@@ -169,7 +169,7 @@ export function PosPage() {
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Punto de venta</h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-600">
               Toca un producto para agregarlo al carrito. El inventario se descuenta al cobrar.
             </p>
           </div>
@@ -210,7 +210,7 @@ export function PosPage() {
                   className="rounded-xl border border-slate-200 p-3 text-left transition hover:border-kubo-500 hover:shadow-sm"
                 >
                   <p className="truncate text-sm font-semibold text-slate-800">{product.name}</p>
-                  <p className="mt-0.5 font-mono text-xs text-slate-400">{product.sku}</p>
+                  <p className="mt-0.5 font-mono text-xs text-slate-600">{product.sku}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-kubo-700">{money(product.price)}</span>
                     {product.low_stock ? (
@@ -245,7 +245,7 @@ export function PosPage() {
                 <li key={line.product.id} className="flex items-center gap-3 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-slate-800">{line.product.name}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-600">
                       {money(line.product.price)} × {line.quantity} ={' '}
                       {money(Number(line.product.price) * line.quantity)}
                     </p>
@@ -334,7 +334,7 @@ export function PosPage() {
             </Button>
 
             {pending > 0 && (
-              <p className="text-center text-xs text-slate-400">
+              <p className="text-center text-xs text-slate-600">
                 {pending} venta(s) esperando sincronización
               </p>
             )}

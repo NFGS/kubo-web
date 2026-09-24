@@ -72,7 +72,7 @@ export function Field({
     <label className="block space-y-1.5">
       <span className="text-xs font-semibold tracking-wide text-slate-600 uppercase">{label}</span>
       {children}
-      {hint && <span className="block text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="block text-xs text-slate-600">{hint}</span>}
     </label>
   );
 }
@@ -125,7 +125,7 @@ export function Badge({ children, tone = 'neutral' }: { children: ReactNode; ton
 
 export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 py-10 text-sm text-slate-500">
+    <div className="flex items-center gap-3 py-10 text-sm text-slate-600">
       <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
       {label}
     </div>
@@ -136,7 +136,7 @@ export function EmptyState({ title, description }: { title: string; description?
   return (
     <div className="rounded-xl border border-dashed border-slate-300 py-10 text-center">
       <p className="text-sm font-semibold text-slate-600">{title}</p>
-      {description && <p className="mt-1 text-xs text-slate-400">{description}</p>}
+      {description && <p className="mt-1 text-xs text-slate-600">{description}</p>}
     </div>
   );
 }

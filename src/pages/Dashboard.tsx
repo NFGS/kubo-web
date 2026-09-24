@@ -75,7 +75,7 @@ function Kpi({
       <div className="min-w-0">
         <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{label}</p>
         <p className="mt-1 truncate text-2xl font-semibold text-slate-900">{value}</p>
-        {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}
+        {hint && <p className="mt-0.5 text-xs text-slate-600">{hint}</p>}
       </div>
     </Card>
   );
@@ -124,7 +124,7 @@ export function DashboardPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Tablero del negocio</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             Indicadores construidos a partir de los eventos de venta, en tiempo real.
           </p>
         </div>

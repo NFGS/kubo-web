@@ -75,7 +75,7 @@ export function Layout() {
           <div className="rounded-xl bg-white/5 p-3 text-xs">
             <p className="font-semibold text-white">{user?.tenantName ?? 'Mi negocio'}</p>
             <p className="mt-0.5 truncate text-slate-400">{user?.email}</p>
-            <p className="mt-1 text-slate-500">{user?.role}</p>
+            <p className="mt-1 text-slate-400">{user?.role}</p>
           </div>
           <button
             type="button"

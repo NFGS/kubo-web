@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Boxes, PackagePlus, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
 import { money, number } from '../lib/format';
@@ -55,9 +55,18 @@ export function ProductsPage() {
   if (term.trim()) query.set('q', term.trim());
   if (onlyLow) query.set('low_stock', 'true');
 
-  const products = useQuery({
+  // Paginacion real (P-13): el servidor devuelve el total y la interfaz pide
+  // paginas de 50. Un catalogo de barrio cabe en una pagina; uno grande se
+  // recorre con "Cargar mas" sin traer la tabla completa de una vez.
+  const products = useInfiniteQuery({
     queryKey: ['products', query.toString()],
-    queryFn: () => apiFetch<ApiList<Product>>(`/products?${query.toString()}`)
+    queryFn: ({ pageParam }) =>
+      apiFetch<ApiList<Product>>(`/products?${query.toString()}&limit=50&offset=${pageParam}`),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const loaded = (lastPage.offset ?? 0) + lastPage.data.length;
+      return loaded < lastPage.total ? loaded : undefined;
+    }
   });
 
   const stats = useQuery({
@@ -132,7 +141,8 @@ export function ProductsPage() {
     }
   });
 
-  const rows = products.data?.data ?? [];
+  const rows = products.data?.pages.flatMap((page) => page.data) ?? [];
+  const catalogTotal = products.data?.pages[0]?.total ?? 0;
   const summary = stats.data?.data;
   const lowStockCount = useMemo(() => summary?.low_stock ?? 0, [summary]);
 
@@ -171,7 +181,7 @@ export function ProductsPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Productos e inventario</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {number(summary?.total ?? 0)} productos · valor del inventario{' '}
             {money(summary?.inventory_value ?? 0)}
           </p>
@@ -243,7 +253,7 @@ export function ProductsPage() {
                   <tr key={product.id} className="hover:bg-slate-50">
                     <td className="py-3">
                       <p className="font-medium text-slate-800">{product.name}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-600">
                         {product.unit} · mínimo {number(product.min_stock)}
                       </p>
                     </td>
@@ -292,6 +302,21 @@ export function ProductsPage() {
                 ))}
               </tbody>
             </table>
+
+            {products.hasNextPage && (
+              <div className="flex items-center justify-between gap-3 pt-4">
+                <p className="text-xs text-slate-500">
+                  Mostrando {number(rows.length)} de {number(catalogTotal)}
+                </p>
+                <Button
+                  variant="secondary"
+                  loading={products.isFetchingNextPage}
+                  onClick={() => void products.fetchNextPage()}
+                >
+                  Cargar más
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </Card>

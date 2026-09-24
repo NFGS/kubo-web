@@ -97,3 +97,15 @@ código nunca necesita saber en qué puerto corre cada servicio.
   en blanco).
 - Mensajes en español pensados para alguien sin conocimientos técnicos.
 - Objetivos táctiles amplios para trabajar en el mostrador.
+
+## Calidad y accesibilidad (Fase 2)
+
+- **E2E con Playwright** (`e2e/accessibility.spec.ts`): ingreso, tablero,
+  recuperación, productos, clientes y POS. Usa el Chrome del sistema en local
+  (`channel: 'chrome'`) y chromium en CI.
+- **Auditoría axe** en cada pantalla: el gate falla ante violaciones graves o
+  críticas de WCAG 2 A/AA. La Fase 2 corrigió tres defectos reales (contrastes y
+  un `select` sin nombre accesible).
+- **Caché por sesión**: al entrar y salir se purgan las cachés del service worker
+  y las consultas, para que un equipo compartido nunca sirva datos del usuario
+  anterior.
