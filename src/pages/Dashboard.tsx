@@ -12,12 +12,14 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { CloudOff, Coins, Package, Receipt, TrendingUp, Users } from 'lucide-react';
-import { apiFetch } from '../lib/api';
+import { useState } from 'react';
+import { CloudOff, Coins, Download, Package, Receipt, TrendingUp, Users } from 'lucide-react';
+import { apiFetch, downloadCsv } from '../lib/api';
 import { compactMoney, dateTime, money, number, paymentLabels, shortDate } from '../lib/format';
 import { useQueue } from '../lib/queue';
+import { useToast } from '../components/Toaster';
 import type { OverviewResponse } from '../lib/types';
-import { Badge, Card, EmptyState, ErrorNote, Spinner } from '../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorNote, Spinner } from '../components/ui';
 
 const PIE_COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -83,6 +85,20 @@ function Kpi({
 
 export function DashboardPage() {
   const { online } = useQueue();
+  const { notify } = useToast();
+  const [exporting, setExporting] = useState(false);
+
+  async function exportSales() {
+    setExporting(true);
+    try {
+      await downloadCsv('/reports/sales.csv', 'ventas.csv');
+      notify('Reporte de ventas descargado', 'success');
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : 'No fue posible exportar las ventas', 'error');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // Una sola peticion: el gateway compone la vista consultando los servicios
   // en paralelo. Antes eran siete viajes de red secuenciales.
@@ -137,6 +153,10 @@ export function DashboardPage() {
             </Badge>
           )}
           {unavailable.length > 0 && <Badge tone="danger">Vistas sin datos: {unavailable.length}</Badge>}
+          <Button variant="secondary" loading={exporting} onClick={exportSales}>
+            <Download className="h-4 w-4" aria-hidden />
+            Exportar ventas
+          </Button>
         </div>
       </header>
 

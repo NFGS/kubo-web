@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CloudOff, Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
+import { CloudOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
 import { money, number, paymentLabels } from '../lib/format';
+import { printReceipt } from '../lib/receipt';
 import { useQueue } from '../lib/queue';
 import { useToast } from '../components/Toaster';
 import type { ApiItem, ApiList, Customer, NewSalePayload, Product, Sale } from '../lib/types';
@@ -231,9 +232,15 @@ export function PosPage() {
           <ErrorNote message={error} />
 
           {lastSale && (
-            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-800">
-              Última venta: <strong>{lastSale.number}</strong> por {money(lastSale.total)} (
-              {paymentLabels[lastSale.payment_method] ?? lastSale.payment_method})
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-800">
+              <span>
+                Última venta: <strong>{lastSale.number}</strong> por {money(lastSale.total)} (
+                {paymentLabels[lastSale.payment_method] ?? lastSale.payment_method})
+              </span>
+              <Button variant="secondary" onClick={() => printReceipt(lastSale)}>
+                <Printer className="h-4 w-4" aria-hidden />
+                Imprimir comprobante
+              </Button>
             </div>
           )}
 

@@ -1,7 +1,17 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Boxes, PackagePlus, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
-import { ApiError, apiFetch } from '../lib/api';
+import {
+  AlertTriangle,
+  Boxes,
+  Download,
+  PackagePlus,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload
+} from 'lucide-react';
+import { ApiError, apiFetch, downloadCsv } from '../lib/api';
 import { money, number } from '../lib/format';
 import { useToast } from '../components/Toaster';
 import type { ApiItem, ApiList, Product } from '../lib/types';
@@ -57,6 +67,19 @@ export function ProductsPage() {
     updated: number;
     errors: { line: number; message: string }[];
   } | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function exportInventory() {
+    setExporting(true);
+    try {
+      await downloadCsv('/reports/inventory.csv', 'inventario.csv');
+      notify('Inventario exportado', 'success');
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : 'No fue posible exportar el inventario', 'error');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const query = new URLSearchParams();
   if (term.trim()) query.set('q', term.trim());
@@ -214,6 +237,10 @@ export function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" loading={exporting} onClick={exportInventory}>
+            <Download className="h-4 w-4" aria-hidden />
+            Exportar CSV
+          </Button>
           <Button
             variant="secondary"
             onClick={() => {

@@ -107,6 +107,39 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return (await response.json()) as T;
 }
 
+/**
+ * Descarga un reporte CSV respetando la sesión (Bearer + refresco) y lo guarda
+ * con `filename`. El endpoint exige el token, por eso se usa un blob y no un
+ * enlace directo.
+ */
+export async function downloadCsv(path: string, filename: string): Promise<void> {
+  let response = await send(path, { method: 'GET' });
+
+  if (response.status === 401) {
+    const refreshed = await refreshSession();
+    if (!refreshed) {
+      unauthorizedHandler?.();
+      throw new ApiError(401, 'SESSION_EXPIRED', 'La sesión expiró, vuelve a ingresar');
+    }
+    response = await send(path, { method: 'GET' });
+  }
+
+  if (!response.ok) {
+    throw await parseError(response);
+  }
+
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  // Revocar de inmediato puede cancelar la descarga en algunos navegadores
+  // (Firefox/Safari); se libera despues de que el navegador la haya tomado.
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 export async function login(email: string, password: string): Promise<TokenResponse> {
   const response = await fetch(`${BASE}/auth/login`, {
     method: 'POST',

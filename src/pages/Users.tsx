@@ -139,7 +139,12 @@ export function UsersPage() {
                 {rows.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50">
                     <td className="py-3">
-                      <p className="font-medium text-slate-800">{user.fullName}</p>
+                      <p className="font-medium text-slate-800">
+                        {user.fullName}
+                        {user.id === currentUser?.id && (
+                          <span className="ml-2 text-xs font-normal text-slate-600">(tú)</span>
+                        )}
+                      </p>
                       <p className="text-xs text-slate-600">{user.email}</p>
                     </td>
                     <td className="py-3">
