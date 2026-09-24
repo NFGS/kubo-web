@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Store } from 'lucide-react';
+import { PackagePlus, Store } from 'lucide-react';
 import { ApiError, apiFetch, refreshSession } from '../lib/api';
 import { useToast } from '../components/Toaster';
 import type { ApiItem, Pack, Tenant } from '../lib/types';
@@ -52,6 +52,22 @@ export function SettingsPage() {
     },
     onError: (caught) =>
       setError(caught instanceof ApiError ? caught.message : 'No fue posible guardar los cambios')
+  });
+
+  const seed = useMutation({
+    mutationFn: () =>
+      apiFetch<{ data: { created: number; skipped: number; pack: string } }>('/packs/apply', {
+        method: 'POST'
+      }),
+    onSuccess: async (response) => {
+      notify(
+        `Catálogo de arranque: ${response.data.created} creado(s), ${response.data.skipped} ya existían`,
+        'success'
+      );
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (caught) =>
+      setError(caught instanceof ApiError ? caught.message : 'No fue posible cargar el catálogo')
   });
 
   const seleccionado = packs.data?.data.find((pack) => pack.key === vertical);
@@ -106,7 +122,16 @@ export function SettingsPage() {
               />
             </Field>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                loading={seed.isPending}
+                onClick={() => seed.mutate()}
+              >
+                <PackagePlus className="h-4 w-4" aria-hidden />
+                Cargar catálogo de arranque
+              </Button>
               <Button type="submit" loading={save.isPending}>
                 Guardar cambios
               </Button>
