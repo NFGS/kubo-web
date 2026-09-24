@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/Dashboard';
 import { LoginPage } from './pages/Login';
 import { PosPage } from './pages/Pos';
 import { ProductsPage } from './pages/Products';
+import { ResetPage } from './pages/Reset';
 
 function ProtectedArea() {
   const { user, ready } = useAuth();
@@ -30,6 +31,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/ingresar" element={<LoginPage />} />
+      <Route path="/recuperar" element={<ResetPage />} />
       <Route element={<ProtectedArea />}>
         <Route path="/tablero" element={<DashboardPage />} />
         <Route path="/pos" element={<PosPage />} />

@@ -9,7 +9,8 @@ export interface User {
 
 export interface TokenResponse {
   accessToken: string;
-  refreshToken: string;
+  /** Ya no viaja al navegador: el gateway lo guarda en cookie httpOnly. */
+  refreshToken?: string;
   tokenType: string;
   expiresInSeconds: number;
   user: User;

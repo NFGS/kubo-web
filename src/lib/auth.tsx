@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode
 } from 'react';
-import { apiFetch, hasSession, logout as apiLogout, purgeCaches, refreshSession, setUnauthorizedHandler } from './api';
+import { apiFetch, logout as apiLogout, purgeCaches, refreshSession, setUnauthorizedHandler } from './api';
 import type { User } from './types';
 
 interface AuthState {
@@ -44,10 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function restoreSession(): Promise<void> {
-      if (!hasSession()) {
-        setReady(true);
-        return;
-      }
+      // El refresh token vive en una cookie httpOnly: la unica forma de saber si
+      // hay sesion es intentar el refresco.
       try {
         const refreshed = await refreshSession();
         if (!refreshed) {

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { BarChart3, PackageCheck, ShieldCheck, WifiOff } from 'lucide-react';
 import { ApiError, login } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -107,6 +107,10 @@ export function LoginPage() {
           <Button type="submit" loading={loading} className="w-full">
             Ingresar
           </Button>
+
+          <Link to="/recuperar" className="block text-center text-sm font-medium text-kubo-700">
+            ¿Olvidaste tu contraseña?
+          </Link>
 
           <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs text-slate-500">
             Demo: <strong>admin@kubo.local</strong> / <strong>Admin123!</strong> — también hay un

@@ -21,6 +21,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 | Ruta | Pantalla | Qué hace |
 | --- | --- | --- |
 | `/ingresar` | Ingreso | Autenticación contra el gateway |
+| `/recuperar` | Recuperación | Pide el enlace por correo y, con `?token=`, cambia la contraseña |
 | `/tablero` | Tablero | KPIs, serie de 14 días, top productos, medios de pago, últimas ventas |
 | `/pos` | Punto de venta | Carrito, cliente, medio de pago y cobro con soporte offline |
 | `/productos` | Catálogo | CRUD de productos y ajustes de inventario |
@@ -31,7 +32,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 ```
 src/
 ├── lib/
-│   ├── api.ts        cliente HTTP con refresco de token en vuelo único
+│   ├── api.ts        cliente HTTP; refresco en vuelo único con cookie httpOnly
 │   ├── auth.tsx      sesión: restaura, refresca y cierra
 │   ├── offline.ts    cola de ventas en IndexedDB
 │   ├── queue.tsx     sincronización automática al recuperar la conexión
@@ -50,15 +51,11 @@ src/
 | Control | Implementación |
 | --- | --- |
 | Access token | Solo en memoria (15 minutos); no se escribe en el navegador |
-| Refresh token | En `localStorage`, rota en cada uso y el reuso se detecta en el servidor |
+| Refresh token | En **cookie `httpOnly` + `SameSite=Strict`** que emite el gateway; el navegador no puede leerla ni guardarla |
 | Refresco | **Vuelo único**: varias peticiones con `401` disparan un solo refresco |
-| Cierre de sesión | Revoca el token en el servidor y **borra las cachés del service worker** |
+| Cierre de sesión | Revoca el token en el servidor, borra la cookie y **limpia las cachés del service worker** |
 | Datos en caché | El service worker cachea solo lecturas (`products`, `customers`, `dashboard`) por una hora |
 | Mismo origen | nginx sirve la app y proxea `/api`: no hay CORS ni cookies entre dominios |
-
-> El refresh token en `localStorage` es una decisión consciente y documentada
-> (ver `kubo-docs/04-seguridad.md` §7). La migración a cookie `httpOnly` está
-> prevista para la fase 2.
 
 ## Funcionamiento sin conexión
 

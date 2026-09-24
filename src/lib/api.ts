@@ -1,16 +1,15 @@
 import type { TokenResponse } from './types';
 
 const BASE = '/api/v1';
-const REFRESH_STORAGE_KEY = 'kubo.refresh';
 
 /**
- * El access token vive solo en memoria (15 minutos): sobrevive a un XSS mucho
- * peor el refresh token, que si se guarda en el navegador para no pedir
- * credenciales en cada recarga. La migracion a cookie httpOnly esta prevista
- * para la fase 2 (ver docs de seguridad).
+ * El access token vive solo en memoria (15 minutos). El refresh token ya **no**
+ * se guarda en el navegador: el gateway (BFF) lo deja en una cookie `httpOnly`
+ * + `SameSite=Strict`, de modo que un XSS no puede leerlo. La sesion se
+ * restaura pidiendo un refresco: si la cookie es valida, llega un access token
+ * nuevo; si no, se muestra el ingreso.
  */
 let accessToken: string | null = null;
-let refreshToken: string | null = localStorage.getItem(REFRESH_STORAGE_KEY);
 let unauthorizedHandler: (() => void) | null = null;
 
 export class ApiError extends Error {
@@ -29,18 +28,8 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler;
 }
 
-export function setTokens(access: string | null, refresh: string | null): void {
-  accessToken = access;
-  refreshToken = refresh;
-  if (refresh) {
-    localStorage.setItem(REFRESH_STORAGE_KEY, refresh);
-  } else {
-    localStorage.removeItem(REFRESH_STORAGE_KEY);
-  }
-}
-
-export function hasSession(): boolean {
-  return refreshToken !== null;
+export function setAccessToken(token: string | null): void {
+  accessToken = token;
 }
 
 async function send(path: string, init: RequestInit): Promise<Response> {
@@ -51,7 +40,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
-  return fetch(`${BASE}${path}`, { ...init, headers });
+  return fetch(`${BASE}${path}`, { ...init, headers, credentials: 'same-origin' });
 }
 
 async function parseError(response: Response): Promise<ApiError> {
@@ -71,23 +60,19 @@ let refreshInFlight: Promise<boolean> | null = null;
 
 /** Refresco de token con vuelo unico: varias peticiones 401 no disparan N refrescos. */
 export async function refreshSession(): Promise<boolean> {
-  if (!refreshToken) {
-    return false;
-  }
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
         const response = await fetch(`${BASE}/auth/refresh`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
+          credentials: 'same-origin'
         });
         if (!response.ok) {
-          setTokens(null, null);
+          setAccessToken(null);
           return false;
         }
         const data = (await response.json()) as TokenResponse;
-        setTokens(data.accessToken, data.refreshToken);
+        setAccessToken(data.accessToken);
         return true;
       } catch {
         return false;
@@ -126,29 +111,51 @@ export async function login(email: string, password: string): Promise<TokenRespo
   const response = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
     body: JSON.stringify({ email, password })
   });
   if (!response.ok) {
     throw await parseError(response);
   }
   const data = (await response.json()) as TokenResponse;
-  setTokens(data.accessToken, data.refreshToken);
+  setAccessToken(data.accessToken);
   return data;
 }
 
-export async function logout(): Promise<void> {
-  if (refreshToken) {
-    try {
-      await fetch(`${BASE}/auth/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      });
-    } catch {
-      // si no hay red, la sesion local se cierra igual
-    }
+/** Solicita el enlace de recuperacion. La respuesta no revela si el correo existe. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const response = await fetch(`${BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!response.ok) {
+    throw await parseError(response);
   }
-  setTokens(null, null);
+}
+
+/** Consume el token del enlace y cambia la contrasena. */
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const response = await fetch(`${BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword })
+  });
+  if (!response.ok) {
+    throw await parseError(response);
+  }
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${BASE}/auth/logout`, {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+  } catch {
+    // si no hay red, la sesion local se cierra igual
+  }
+  setAccessToken(null);
 }
 
 /** Borra los datos del negocio guardados por el service worker al cerrar sesion. */
