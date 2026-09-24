@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { PackagePlus, Store } from 'lucide-react';
-import { ApiError, apiFetch, refreshSession } from '../lib/api';
+import { PackagePlus, ShieldCheck, Store } from 'lucide-react';
+import {
+  ApiError,
+  apiFetch,
+  refreshSession,
+  totpDisable,
+  totpEnable,
+  totpSetup
+} from '../lib/api';
 import { useToast } from '../components/Toaster';
-import type { ApiItem, Pack, Tenant } from '../lib/types';
+import type { ApiItem, Pack, Tenant, User } from '../lib/types';
 import { Button, Card, ErrorNote, Field, Input, Select, Spinner } from '../components/ui';
 
 /**
@@ -70,6 +77,43 @@ export function SettingsPage() {
       setError(caught instanceof ApiError ? caught.message : 'No fue posible cargar el catálogo')
   });
 
+  const me = useQuery({ queryKey: ['me'], queryFn: () => apiFetch<User>('/auth/me') });
+  const [secret, setSecret] = useState<{ secret: string; otpauthUri: string } | null>(null);
+  const [totpCode, setTotpCode] = useState('');
+
+  const setup = useMutation({
+    mutationFn: totpSetup,
+    onSuccess: (data) => {
+      setSecret(data);
+      notify('Escanea el código con tu aplicación autenticadora', 'info');
+    },
+    onError: (caught) =>
+      setError(caught instanceof ApiError ? caught.message : 'No fue posible generar el secreto')
+  });
+
+  const enable = useMutation({
+    mutationFn: () => totpEnable(totpCode.trim()),
+    onSuccess: async () => {
+      setSecret(null);
+      setTotpCode('');
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      notify('Segundo factor activado', 'success');
+    },
+    onError: (caught) =>
+      setError(caught instanceof ApiError ? caught.message : 'El código no es válido')
+  });
+
+  const disable = useMutation({
+    mutationFn: () => totpDisable(totpCode.trim()),
+    onSuccess: async () => {
+      setTotpCode('');
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      notify('Segundo factor desactivado', 'success');
+    },
+    onError: (caught) =>
+      setError(caught instanceof ApiError ? caught.message : 'El código no es válido')
+  });
+
   const seleccionado = packs.data?.data.find((pack) => pack.key === vertical);
 
   return (
@@ -83,6 +127,68 @@ export function SettingsPage() {
       </header>
 
       <ErrorNote message={error} />
+
+      <Card title="Segundo factor">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">
+            <ShieldCheck className="mr-1 inline h-4 w-4 text-kubo-600" aria-hidden />
+            Con el segundo factor activo, al ingresar se pide un código de 6 dígitos de tu
+            aplicación autenticadora además de la contraseña.
+          </p>
+
+          {me.data?.totpEnabled ? (
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Código actual" hint="Necesario para desactivar">
+                <Input
+                  value={totpCode}
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, ''))}
+                />
+              </Field>
+              <Button
+                type="button"
+                variant="secondary"
+                loading={disable.isPending}
+                disabled={totpCode.length !== 6}
+                onClick={() => disable.mutate()}
+              >
+                Desactivar
+              </Button>
+            </div>
+          ) : secret ? (
+            <div className="space-y-3">
+              <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm break-all text-slate-700">
+                Secreto: <strong>{secret.secret}</strong>
+                <br />
+                URI: <span className="text-xs">{secret.otpauthUri}</span>
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <Field label="Código del autenticador" hint="Confirma que el secreto quedó bien">
+                  <Input
+                    value={totpCode}
+                    inputMode="numeric"
+                    maxLength={6}
+                    onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, ''))}
+                  />
+                </Field>
+                <Button
+                  type="button"
+                  loading={enable.isPending}
+                  disabled={totpCode.length !== 6}
+                  onClick={() => enable.mutate()}
+                >
+                  Activar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button type="button" loading={setup.isPending} onClick={() => setup.mutate()}>
+              Configurar segundo factor
+            </Button>
+          )}
+        </div>
+      </Card>
 
       {tenant.isLoading || packs.isLoading ? (
         <Spinner label="Cargando configuración…" />

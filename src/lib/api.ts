@@ -1,4 +1,4 @@
-import type { TokenResponse } from './types';
+import type { TokenResponse, TotpChallenge, TotpSetup, User } from './types';
 
 const BASE = '/api/v1';
 
@@ -140,7 +140,7 @@ export async function downloadCsv(path: string, filename: string): Promise<void>
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-export async function login(email: string, password: string): Promise<TokenResponse> {
+export async function login(email: string, password: string): Promise<TokenResponse | TotpChallenge> {
   const response = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -150,9 +150,47 @@ export async function login(email: string, password: string): Promise<TokenRespo
   if (!response.ok) {
     throw await parseError(response);
   }
+
+  const data = (await response.json()) as TokenResponse | TotpChallenge;
+
+  // Con segundo factor activo (P-30) la contrasena solo abre el desafio: la
+  // sesion se emite cuando el codigo TOTP es valido.
+  if ('totpRequired' in data && data.totpRequired) {
+    return data;
+  }
+
+  setAccessToken((data as TokenResponse).accessToken);
+  return data as TokenResponse;
+}
+
+/** Segundo paso del acceso: desafio + codigo a cambio de la sesion. */
+export async function verifyTotp(challengeToken: string, code: string): Promise<TokenResponse> {
+  const response = await fetch(`${BASE}/auth/totp/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ challengeToken, code })
+  });
+  if (!response.ok) {
+    throw await parseError(response);
+  }
+
   const data = (await response.json()) as TokenResponse;
   setAccessToken(data.accessToken);
   return data;
+}
+
+/** Genera (o regenera) el secreto del segundo factor; queda pendiente de confirmar. */
+export function totpSetup(): Promise<TotpSetup> {
+  return apiFetch<TotpSetup>('/auth/totp/setup', { method: 'POST' });
+}
+
+export function totpEnable(code: string): Promise<User> {
+  return apiFetch<User>('/auth/totp/enable', { method: 'POST', body: JSON.stringify({ code }) });
+}
+
+export function totpDisable(code: string): Promise<User> {
+  return apiFetch<User>('/auth/totp/disable', { method: 'POST', body: JSON.stringify({ code }) });
 }
 
 /** Solicita el enlace de recuperacion. La respuesta no revela si el correo existe. */

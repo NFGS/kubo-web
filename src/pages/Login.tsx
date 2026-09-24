@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { BarChart3, PackageCheck, ShieldCheck, WifiOff } from 'lucide-react';
-import { ApiError, login } from '../lib/api';
+import { ApiError, login, verifyTotp } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { Button, ErrorNote, Field, Input } from '../components/ui';
 
@@ -18,6 +18,9 @@ export function LoginPage() {
   const [password, setPassword] = useState('Admin123!');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Segundo paso del acceso (P-30): el desafio y el codigo del autenticador.
+  const [challenge, setChallenge] = useState<string | null>(null);
+  const [code, setCode] = useState('');
 
   if (user) {
     return <Navigate to="/tablero" replace />;
@@ -29,10 +32,36 @@ export function LoginPage() {
     setError(null);
     try {
       const session = await login(email.trim(), password);
+
+      // La API responde el desafio solo cuando el segundo factor esta activo.
+      if ('totpRequired' in session) {
+        setChallenge(session.challengeToken);
+        return;
+      }
+
       await signIn(session.user);
     } catch (caught) {
       setError(
         caught instanceof ApiError ? caught.message : 'No fue posible conectar con el servidor'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleTotp(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    if (!challenge) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const session = await verifyTotp(challenge, code.trim());
+      await signIn(session.user);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError ? caught.message : 'No fue posible verificar el código'
       );
     } finally {
       setLoading(false);
@@ -76,6 +105,46 @@ export function LoginPage() {
       </section>
 
       <section className="flex items-center justify-center p-6">
+        {challenge ? (
+          <form onSubmit={handleTotp} className="card w-full max-w-md space-y-5 p-8">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold text-slate-900">Verifica tu identidad</h2>
+              <p className="text-sm text-slate-500">
+                Escribe el código de 6 dígitos de tu aplicación autenticadora.
+              </p>
+            </div>
+
+            <ErrorNote message={error} />
+
+            <Field label="Código de verificación">
+              <Input
+                value={code}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                required
+                autoFocus
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+              />
+            </Field>
+
+            <Button type="submit" loading={loading} className="w-full">
+              Verificar código
+            </Button>
+
+            <button
+              type="button"
+              className="block w-full text-center text-sm font-medium text-kubo-700"
+              onClick={() => {
+                setChallenge(null);
+                setCode('');
+                setError(null);
+              }}
+            >
+              Volver al ingreso
+            </button>
+          </form>
+        ) : (
         <form onSubmit={handleSubmit} className="card w-full max-w-md space-y-5 p-8">
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold text-slate-900">Ingresa a tu negocio</h2>
@@ -117,6 +186,7 @@ export function LoginPage() {
             usuario vendedor con menos permisos.
           </p>
         </form>
+        )}
       </section>
     </div>
   );

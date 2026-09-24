@@ -6,6 +6,19 @@ export interface User {
   status?: string;
   tenantId: string;
   tenantName: string;
+  /** Segundo factor activo (P-30). */
+  totpEnabled?: boolean;
+}
+
+/** Desafio del segundo factor: el acceso continua con el codigo TOTP (P-30). */
+export interface TotpChallenge {
+  totpRequired: boolean;
+  challengeToken: string;
+}
+
+export interface TotpSetup {
+  secret: string;
+  otpauthUri: string;
 }
 
 export interface TokenResponse {
