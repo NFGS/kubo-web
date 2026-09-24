@@ -11,3 +11,6 @@ blob-report/
 .env.local
 *.log
 .DS_Store
+
+# Artefacto de build de TypeScript (se regenera en cada typecheck)
+tsconfig.tsbuildinfo
