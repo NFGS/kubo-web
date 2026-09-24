@@ -78,6 +78,47 @@ export interface Sale {
   items: SaleItem[];
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  tax_id: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface PurchaseItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_cost: string;
+  tax_rate: string;
+  tax_amount: string;
+  total: string;
+}
+
+export interface Purchase {
+  id: string;
+  number: string;
+  status: 'RECEIVED' | 'VOIDED';
+  supplier_id: string;
+  supplier_name: string;
+  subtotal: string;
+  tax: string;
+  total: string;
+  notes: string | null;
+  received_by: string | null;
+  received_at: string | null;
+  voided_at: string | null;
+  items: PurchaseItem[];
+}
+
 export interface DashboardSummary {
   sales_count: number;
   revenue: number;

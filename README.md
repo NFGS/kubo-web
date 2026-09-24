@@ -25,6 +25,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 | `/tablero` | Tablero | KPIs, serie de 14 días, top productos, medios de pago, últimas ventas |
 | `/pos` | Punto de venta | Carrito, cliente, medio de pago y cobro con soporte offline |
 | `/productos` | Catálogo | CRUD de productos y ajustes de inventario |
+| `/compras` | Compras y proveedores | Alta de proveedores, registro de compras con líneas y anulación (suma inventario y costo) |
 | `/clientes` | Clientes | CRUD con documento y teléfono enmascarados en el listado |
 
 ## Arquitectura del cliente

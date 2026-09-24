@@ -9,6 +9,7 @@ import {
   Package,
   RefreshCw,
   ShoppingCart,
+  Truck,
   Users,
   Wifi
 } from 'lucide-react';
@@ -20,6 +21,7 @@ const navigation = [
   { to: '/tablero', label: 'Tablero', icon: LayoutDashboard },
   { to: '/pos', label: 'Vender', icon: ShoppingCart },
   { to: '/productos', label: 'Productos', icon: Package },
+  { to: '/compras', label: 'Compras', icon: Truck },
   { to: '/clientes', label: 'Clientes', icon: Users }
 ];
 

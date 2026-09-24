@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/Dashboard';
 import { LoginPage } from './pages/Login';
 import { PosPage } from './pages/Pos';
 import { ProductsPage } from './pages/Products';
+import { PurchasesPage } from './pages/Purchases';
 import { ResetPage } from './pages/Reset';
 
 function ProtectedArea() {
@@ -36,6 +37,7 @@ export function App() {
         <Route path="/tablero" element={<DashboardPage />} />
         <Route path="/pos" element={<PosPage />} />
         <Route path="/productos" element={<ProductsPage />} />
+        <Route path="/compras" element={<PurchasesPage />} />
         <Route path="/clientes" element={<CustomersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/tablero" replace />} />
