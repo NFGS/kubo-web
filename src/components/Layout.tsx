@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Truck,
   Users,
+  Wallet,
   Wifi
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
@@ -22,6 +23,8 @@ const navigation = [
   { to: '/pos', label: 'Vender', icon: ShoppingCart },
   { to: '/productos', label: 'Productos', icon: Package },
   { to: '/compras', label: 'Compras', icon: Truck },
+  { to: '/caja', label: 'Caja', icon: Wallet },
+  { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/clientes', label: 'Clientes', icon: Users }
 ];
 

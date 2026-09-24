@@ -3,6 +3,7 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  status?: string;
   tenantId: string;
   tenantName: string;
 }
@@ -117,6 +118,31 @@ export interface Purchase {
   received_at: string | null;
   voided_at: string | null;
   items: PurchaseItem[];
+}
+
+export interface CashSessionSummary {
+  sales_count: number;
+  voided_count: number;
+  total_sales: string;
+  cash_sales: string;
+  other_sales: string;
+  cash_returns: string;
+  expected_cash: string;
+}
+
+export interface CashSession {
+  id: string;
+  status: 'OPEN' | 'CLOSED';
+  opened_by: string | null;
+  opened_at: string | null;
+  opening_amount: string;
+  closed_by: string | null;
+  closed_at: string | null;
+  counted_amount: string | null;
+  expected_amount: string | null;
+  difference: string | null;
+  notes: string | null;
+  summary?: CashSessionSummary;
 }
 
 export interface DashboardSummary {

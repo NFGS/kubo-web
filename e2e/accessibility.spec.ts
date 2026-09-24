@@ -71,6 +71,14 @@ test('productos, clientes y POS son accesibles', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /compras y proveedores/i })).toBeVisible();
   await auditar(page);
 
+  await page.goto('/caja');
+  await expect(page.getByRole('heading', { name: /^caja$/i })).toBeVisible();
+  await auditar(page);
+
+  await page.goto('/usuarios');
+  await expect(page.getByRole('heading', { name: /usuarios y roles/i })).toBeVisible();
+  await auditar(page);
+
   await page.goto('/pos');
   await expect(page.getByRole('heading', { name: /punto de venta/i })).toBeVisible();
   await auditar(page);
