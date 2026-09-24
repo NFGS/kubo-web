@@ -248,3 +248,25 @@ export interface PendingSale {
   createdAt: string;
   label: string;
 }
+
+/** Paquete de configuracion por vertical (P-17, ADR-0013). */
+export interface Pack {
+  key: string;
+  name: string;
+  description: string;
+  product_label: string;
+  product_label_plural: string;
+  default_tax_rate: string;
+  tracks_stock: boolean;
+  pos_flow: string;
+}
+
+/** Perfil del negocio: zona horaria y vertical activo. */
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  timezone: string;
+  vertical: string;
+}

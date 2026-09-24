@@ -8,6 +8,7 @@ import {
   Menu,
   Package,
   RefreshCw,
+  Settings,
   ShoppingCart,
   Truck,
   Users,
@@ -15,21 +16,25 @@ import {
   Wifi
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { usePack } from '../lib/pack';
 import { useQueue } from '../lib/queue';
 import { Badge, Button } from './ui';
 
-const navigation = [
-  { to: '/tablero', label: 'Tablero', icon: LayoutDashboard },
-  { to: '/pos', label: 'Vender', icon: ShoppingCart },
-  { to: '/productos', label: 'Productos', icon: Package },
-  { to: '/compras', label: 'Compras', icon: Truck },
-  { to: '/caja', label: 'Caja', icon: Wallet },
-  { to: '/usuarios', label: 'Usuarios', icon: Users },
-  { to: '/clientes', label: 'Clientes', icon: Users }
-];
-
 export function Layout() {
   const { user, signOut } = useAuth();
+  // La etiqueta del catalogo la define el vertical del negocio (P-17): una
+  // tienda ve "Productos" y un restaurante "Platillos", sin tocar el nucleo.
+  const pack = usePack();
+  const navigation = [
+    { to: '/tablero', label: 'Tablero', icon: LayoutDashboard },
+    { to: '/pos', label: 'Vender', icon: ShoppingCart },
+    { to: '/productos', label: pack.product_label_plural, icon: Package },
+    { to: '/compras', label: 'Compras', icon: Truck },
+    { to: '/caja', label: 'Caja', icon: Wallet },
+    { to: '/usuarios', label: 'Usuarios', icon: Users },
+    { to: '/clientes', label: 'Clientes', icon: Users },
+    { to: '/configuracion', label: 'Configuración', icon: Settings }
+  ];
   const { pending, syncing, online, flush } = useQueue();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);

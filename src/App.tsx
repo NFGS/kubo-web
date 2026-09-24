@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Spinner } from './components/ui';
 import { useAuth } from './lib/auth';
+import { PackProvider } from './lib/pack';
 import { CashPage } from './pages/Cash';
 import { CustomersPage } from './pages/Customers';
 import { DashboardPage } from './pages/Dashboard';
@@ -10,6 +11,7 @@ import { PosPage } from './pages/Pos';
 import { ProductsPage } from './pages/Products';
 import { PurchasesPage } from './pages/Purchases';
 import { ResetPage } from './pages/Reset';
+import { SettingsPage } from './pages/Settings';
 import { UsersPage } from './pages/Users';
 
 function ProtectedArea() {
@@ -27,7 +29,11 @@ function ProtectedArea() {
     return <Navigate to="/ingresar" replace />;
   }
 
-  return <Layout />;
+  return (
+    <PackProvider>
+      <Layout />
+    </PackProvider>
+  );
 }
 
 export function App() {
@@ -43,6 +49,7 @@ export function App() {
         <Route path="/caja" element={<CashPage />} />
         <Route path="/usuarios" element={<UsersPage />} />
         <Route path="/clientes" element={<CustomersPage />} />
+        <Route path="/configuracion" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/tablero" replace />} />
     </Routes>
