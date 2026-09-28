@@ -289,6 +289,13 @@ export interface Tenant {
   plan: string;
   timezone: string;
   vertical: string;
+  /** Estado comercial (ADR-0021) y cupos del plan. */
+  status?: string;
+  maxUsers?: number;
+  maxWarehouses?: number;
+  activeUsers?: number;
+  /** Fecha hasta la que esta pagado el plan (F6.2). */
+  planRenewsAt?: string | null;
 }
 
 /** Bodega o local donde hay existencia (P-22). */
@@ -316,6 +323,14 @@ export interface Transfer {
   completed_at: string | null;
   created_at: string | null;
   items: TransferLine[];
+}
+
+/** Uso del negocio para su plan (F6.1). */
+export interface Usage {
+  warehouses: number;
+  products: number;
+  sales_month: { month: string; count: number; revenue: string };
+  documents: { count: number; bytes: number };
 }
 
 /** Aviso del buzon de notificaciones (P-19). */

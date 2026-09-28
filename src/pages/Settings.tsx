@@ -10,7 +10,8 @@ import {
   totpSetup
 } from '../lib/api';
 import { useToast } from '../components/Toaster';
-import type { ApiItem, Pack, Tenant, User } from '../lib/types';
+import { money, number } from '../lib/format';
+import type { ApiItem, Pack, Tenant, Usage, User } from '../lib/types';
 import { Button, Card, ErrorNote, Field, Input, Select, Spinner } from '../components/ui';
 
 /**
@@ -78,6 +79,11 @@ export function SettingsPage() {
   });
 
   const me = useQuery({ queryKey: ['me'], queryFn: () => apiFetch<User>('/auth/me') });
+
+  const uso = useQuery({
+    queryKey: ['usage'],
+    queryFn: () => apiFetch<ApiItem<Usage>>('/usage')
+  });
   const [secret, setSecret] = useState<{ secret: string; otpauthUri: string } | null>(null);
   const [totpCode, setTotpCode] = useState('');
 
@@ -127,6 +133,41 @@ export function SettingsPage() {
       </header>
 
       <ErrorNote message={error} />
+
+      <Card title="Uso del plan">
+        {uso.isLoading ? (
+          <Spinner label="Midiendo el uso…" />
+        ) : (
+          <ul className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+            <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+              Usuarios activos: <strong>{tenant.data?.data.activeUsers ?? '—'}</strong> de{' '}
+              {tenant.data?.data.maxUsers ?? '—'}
+            </li>
+            <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+              Bodegas: <strong>{uso.data?.data.warehouses ?? '—'}</strong> de{' '}
+              {tenant.data?.data.maxWarehouses ?? '—'}
+            </li>
+            <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+              {seleccionado?.product_label_plural ?? 'Productos'}:{' '}
+              <strong>{number(uso.data?.data.products ?? 0)}</strong>
+            </li>
+            <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+              Ventas de {uso.data?.data.sales_month.month ?? '—'}:{' '}
+              <strong>{number(uso.data?.data.sales_month.count ?? 0)}</strong> (
+              {money(uso.data?.data.sales_month.revenue ?? 0)})
+            </li>
+            <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+              Documentos: <strong>{number(uso.data?.data.documents.count ?? 0)}</strong> (
+              {((uso.data?.data.documents.bytes ?? 0) / 1024).toFixed(1)} KB)
+            </li>
+            {tenant.data?.data.planRenewsAt && (
+              <li className="rounded-xl bg-slate-50 px-3.5 py-3">
+                Plan pagado hasta: <strong>{tenant.data.data.planRenewsAt}</strong>
+              </li>
+            )}
+          </ul>
+        )}
+      </Card>
 
       <Card title="Segundo factor">
         <div className="space-y-4">
