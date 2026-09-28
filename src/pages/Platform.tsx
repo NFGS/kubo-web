@@ -23,6 +23,18 @@ interface PlatformTenant {
   maxWarehouses: number;
 }
 
+interface PendingPayment {
+  id: string;
+  tenantName: string;
+  plan: string;
+  cycleMonths: number;
+  amount: string;
+  currency: string;
+  provider: string;
+  reference: string;
+  createdAt: string;
+}
+
 interface AuditEntry {
   actorEmail: string;
   action: string;
@@ -43,6 +55,7 @@ export function PlatformPage() {
   const [loading, setLoading] = useState(false);
   const [tenants, setTenants] = useState<PlatformTenant[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [payments, setPayments] = useState<PendingPayment[]>([]);
 
   async function platformFetch(path: string, init: RequestInit = {}): Promise<Response> {
     const headers = new Headers(init.headers);
@@ -54,9 +67,10 @@ export function PlatformPage() {
   }
 
   async function cargar(): Promise<void> {
-    const [negocios, auditoria] = await Promise.all([
+    const [negocios, auditoria, pagos] = await Promise.all([
       platformFetch('/platform/tenants'),
-      platformFetch('/platform/audit?limit=20')
+      platformFetch('/platform/audit?limit=20'),
+      platformFetch('/platform/payments')
     ]);
 
     if (negocios.ok) {
@@ -65,6 +79,23 @@ export function PlatformPage() {
     if (auditoria.ok) {
       setAudit(((await auditoria.json()) as { data: AuditEntry[] }).data ?? []);
     }
+    if (pagos.ok) {
+      setPayments(((await pagos.json()) as PendingPayment[]) ?? []);
+    }
+  }
+
+  /** Registra el pago de una intencion: extiende el plan por su ciclo (F6.6). */
+  async function registrarPago(pago: PendingPayment): Promise<void> {
+    setError(null);
+    const response = await platformFetch(`/platform/payments/${pago.id}/confirm`, { method: 'POST' });
+
+    if (!response.ok) {
+      const body = (await response.json()) as { message?: string };
+      setError(body.message ?? 'No fue posible registrar el pago');
+      return;
+    }
+
+    await cargar();
   }
 
   async function entrar(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -295,6 +326,43 @@ export function PlatformPage() {
               </tbody>
             </table>
           </div>
+        </Card>
+
+        <Card title="Pagos por confirmar">
+          {payments.length === 0 ? (
+            <p className="text-sm text-slate-600">No hay pagos pendientes de confirmar.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                    <th className="pb-3">Negocio</th>
+                    <th className="pb-3">Plan</th>
+                    <th className="pb-3">Monto</th>
+                    <th className="pb-3">Referencia</th>
+                    <th className="pb-3 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {payments.map((pago) => (
+                    <tr key={pago.id} className="hover:bg-slate-50">
+                      <td className="py-3 font-medium text-slate-800">{pago.tenantName}</td>
+                      <td className="py-3 text-slate-700">
+                        {pago.plan} · {pago.cycleMonths} mes(es)
+                      </td>
+                      <td className="py-3 text-slate-700">
+                        {pago.amount} {pago.currency}
+                      </td>
+                      <td className="py-3 font-mono text-xs text-slate-600">{pago.reference}</td>
+                      <td className="py-3 text-right">
+                        <Button onClick={() => void registrarPago(pago)}>Registrar pago</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         <Card title="Auditoría de plataforma">

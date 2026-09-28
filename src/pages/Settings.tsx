@@ -22,6 +22,13 @@ import { Button, Card, ErrorNote, Field, Input, Select, Spinner } from '../compo
  * refresca la sesión: la interfaz y el ERP usan los valores nuevos sin volver a
  * ingresar.
  */
+interface PlanPrice {
+  plan: string;
+  currency: string;
+  cycleMonths: number;
+  amount: string;
+}
+
 export function SettingsPage() {
   const queryClient = useQueryClient();
   const { notify } = useToast();
@@ -79,6 +86,29 @@ export function SettingsPage() {
   });
 
   const me = useQuery({ queryKey: ['me'], queryFn: () => apiFetch<User>('/auth/me') });
+  const prices = useQuery({
+    queryKey: ['prices'],
+    queryFn: () => apiFetch<{ data: PlanPrice[] }>('/tenants/me/prices')
+  });
+
+  /** Pide pagar el plan: la intencion queda pendiente y el operador la confirma. */
+  const pagar = useMutation({
+    mutationFn: (precio: PlanPrice) =>
+      apiFetch<{ reference: string; amount: string; status: string }>('/tenants/me/payments', {
+        method: 'POST',
+        body: JSON.stringify({ plan: precio.plan, cycle_months: precio.cycleMonths })
+      }),
+    onSuccess: (respuesta) => {
+      setError(null);
+      notify(
+        `Solicitud registrada (${respuesta.amount}). El operador confirmara el pago; la referencia es ${respuesta.reference}.`,
+        'success'
+      );
+      void queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+    onError: (caught) =>
+      setError(caught instanceof ApiError ? caught.message : 'No fue posible registrar la solicitud de pago')
+  });
 
   const uso = useQuery({
     queryKey: ['usage'],
@@ -166,6 +196,38 @@ export function SettingsPage() {
               </li>
             )}
           </ul>
+        )}
+      </Card>
+
+      <Card title="Pagar el plan">
+        {prices.isLoading ? (
+          <Spinner label="Consultando precios…" />
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">
+              Elige un ciclo: la solicitud queda registrada y el operador confirma el pago.
+            </p>
+            <ul className="grid gap-3 text-sm sm:grid-cols-2">
+              {(prices.data?.data ?? []).map((precio) => (
+                <li
+                  key={`${precio.plan}-${precio.cycleMonths}`}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3"
+                >
+                  <span className="text-slate-700">
+                    <strong>{money(Number(precio.amount))}</strong>{' '}
+                    {precio.currency} · {precio.cycleMonths} mes(es)
+                  </span>
+                  <Button
+                    variant="secondary"
+                    disabled={pagar.isPending}
+                    onClick={() => pagar.mutate(precio)}
+                  >
+                    Solicitar pago
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </Card>
 
