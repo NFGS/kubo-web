@@ -41,6 +41,13 @@ test('el ingreso lleva al tablero y el tablero es accesible', async ({ page }) =
   await auditar(page);
 });
 
+test('el panel de plataforma carga y es accesible', async ({ page }) => {
+  await page.goto('/plataforma');
+
+  await expect(page.getByRole('heading', { name: /plataforma kubo/i })).toBeVisible();
+  await auditar(page);
+});
+
 test('la pagina de recuperacion de contrasena carga', async ({ page }) => {
   await page.goto('/recuperar');
 

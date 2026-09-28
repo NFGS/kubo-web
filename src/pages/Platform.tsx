@@ -1,0 +1,318 @@
+import { useState, type FormEvent } from 'react';
+import { Building2, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Badge, Button, Card, ErrorNote, Field, Input } from '../components/ui';
+
+/**
+ * Panel de plataforma (F6.4, ADR-0025).
+ *
+ * Reino separado: su token NO es el del negocio (el gateway lo exige y lo
+ * aísla), y el acceso siempre pide el código del autenticador. El poder es
+ * mínimo: listar negocios, suspender, reactivar y registrar pagos; nunca se leen
+ * datos de negocio (ventas, clientes, documentos).
+ */
+
+interface PlatformTenant {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  status: string;
+  planRenewsAt: string | null;
+  activeUsers: number;
+  maxUsers: number;
+  maxWarehouses: number;
+}
+
+interface AuditEntry {
+  actorEmail: string;
+  action: string;
+  tenantId: string | null;
+  detail: string | null;
+  createdAt: string;
+}
+
+const BASE = '/api/v1';
+
+export function PlatformPage() {
+  const [token, setToken] = useState<string | null>(null);
+  const [email, setEmail] = useState('operador@kubo.local');
+  const [password, setPassword] = useState('');
+  const [challenge, setChallenge] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [tenants, setTenants] = useState<PlatformTenant[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+
+  async function platformFetch(path: string, init: RequestInit = {}): Promise<Response> {
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    if (init.body) {
+      headers.set('Content-Type', 'application/json');
+    }
+    return fetch(`${BASE}${path}`, { ...init, headers });
+  }
+
+  async function cargar(): Promise<void> {
+    const [negocios, auditoria] = await Promise.all([
+      platformFetch('/platform/tenants'),
+      platformFetch('/platform/audit?limit=20')
+    ]);
+
+    if (negocios.ok) {
+      setTenants(((await negocios.json()) as PlatformTenant[]) ?? []);
+    }
+    if (auditoria.ok) {
+      setAudit(((await auditoria.json()) as { data: AuditEntry[] }).data ?? []);
+    }
+  }
+
+  async function entrar(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${BASE}/platform/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password })
+      });
+      const body = (await response.json()) as { challengeToken?: string; message?: string };
+
+      if (!response.ok) {
+        throw new Error(body.message ?? 'No fue posible ingresar');
+      }
+      setChallenge(body.challengeToken ?? null);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'No fue posible ingresar');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function verificar(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${BASE}/platform/auth/totp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeToken: challenge, code: code.trim() })
+      });
+      const body = (await response.json()) as { accessToken?: string; message?: string };
+
+      if (!response.ok || !body.accessToken) {
+        throw new Error(body.message ?? 'El código no es válido');
+      }
+
+      setToken(body.accessToken);
+      setChallenge(null);
+      setCode('');
+      setPassword('');
+      await cargar();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'El código no es válido');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function actualizar(tenant: PlatformTenant, patch: Record<string, unknown>): Promise<void> {
+    setError(null);
+    const response = await platformFetch(`/platform/tenants/${tenant.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch)
+    });
+
+    if (!response.ok) {
+      const body = (await response.json()) as { message?: string };
+      setError(body.message ?? 'No fue posible actualizar el negocio');
+      return;
+    }
+
+    await cargar();
+  }
+
+  if (!token) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-ink-900 p-6">
+        <form onSubmit={challenge ? verificar : entrar} className="card w-full max-w-md space-y-5 p-8">
+          <div className="space-y-1">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold text-slate-900">
+              <ShieldCheck className="h-6 w-6 text-kubo-600" aria-hidden />
+              Plataforma Kubo
+            </h1>
+            <p className="text-sm text-slate-500">
+              Acceso de operador: segundo factor obligatorio y auditoría de cada acción.
+            </p>
+          </div>
+
+          <ErrorNote message={error} />
+
+          {challenge ? (
+            <>
+              <Field label="Código del autenticador">
+                <Input
+                  value={code}
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+                />
+              </Field>
+              <Button type="submit" loading={loading} className="w-full">
+                Verificar código
+              </Button>
+              <button
+                type="button"
+                className="block w-full text-center text-sm font-medium text-kubo-700"
+                onClick={() => {
+                  setChallenge(null);
+                  setCode('');
+                  setError(null);
+                }}
+              >
+                Volver
+              </button>
+            </>
+          ) : (
+            <>
+              <Field label="Correo">
+                <Input
+                  type="email"
+                  value={email}
+                  autoComplete="username"
+                  required
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </Field>
+              <Field label="Contraseña">
+                <Input
+                  type="password"
+                  value={password}
+                  autoComplete="current-password"
+                  required
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </Field>
+              <Button type="submit" loading={loading} className="w-full">
+                Ingresar
+              </Button>
+            </>
+          )}
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-semibold text-slate-900">
+              <ShieldCheck className="h-6 w-6 text-kubo-600" aria-hidden />
+              Panel de plataforma
+            </h1>
+            <p className="text-sm text-slate-600">
+              Negocios, plan y estado. El operador no lee datos de negocio: solo los gestiona.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void cargar();
+            }}
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            Actualizar
+          </Button>
+        </header>
+
+        <ErrorNote message={error} />
+
+        <Card title="Negocios">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                  <th className="pb-3">Negocio</th>
+                  <th className="pb-3">Plan</th>
+                  <th className="pb-3">Estado</th>
+                  <th className="pb-3">Usuarios</th>
+                  <th className="pb-3">Renueva</th>
+                  <th className="pb-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {tenants.map((tenant) => (
+                  <tr key={tenant.id} className="hover:bg-slate-50">
+                    <td className="py-3">
+                      <p className="flex items-center gap-2 font-medium text-slate-800">
+                        <Building2 className="h-4 w-4 text-slate-400" aria-hidden />
+                        {tenant.name}
+                      </p>
+                      <p className="text-xs text-slate-600">{tenant.slug}</p>
+                    </td>
+                    <td className="py-3 text-slate-700">{tenant.plan}</td>
+                    <td className="py-3">
+                      {tenant.status === 'ACTIVE' ? (
+                        <Badge tone="success">Activo</Badge>
+                      ) : (
+                        <Badge tone="warning">Suspendido</Badge>
+                      )}
+                    </td>
+                    <td className="py-3 text-slate-700">
+                      {tenant.activeUsers} de {tenant.maxUsers}
+                    </td>
+                    <td className="py-3 text-slate-600">{tenant.planRenewsAt ?? '—'}</td>
+                    <td className="py-3">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {tenant.status === 'ACTIVE' ? (
+                          <Button
+                            variant="secondary"
+                            onClick={() => void actualizar(tenant, { status: 'SUSPENDED' })}
+                          >
+                            Suspender
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            onClick={() => void actualizar(tenant, { status: 'ACTIVE' })}
+                          >
+                            Reactivar
+                          </Button>
+                        )}
+                        <Button onClick={() => void actualizar(tenant, { renewDays: 30 })}>
+                          Renovar 30 días
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card title="Auditoría de plataforma">
+          <ul className="divide-y divide-slate-100 text-sm">
+            {audit.map((entrada, indice) => (
+              <li key={`${entrada.createdAt}-${indice}`} className="flex justify-between gap-3 py-2">
+                <span className="text-slate-700">
+                  <strong>{entrada.action}</strong>
+                  {entrada.detail ? ` · ${entrada.detail}` : ''}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {entrada.actorEmail} · {entrada.createdAt.slice(0, 19).replace('T', ' ')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  );
+}

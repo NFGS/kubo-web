@@ -8,6 +8,7 @@ import { CustomersPage } from './pages/Customers';
 import { DashboardPage } from './pages/Dashboard';
 import { LoginPage } from './pages/Login';
 import { NotificationsPage } from './pages/Notifications';
+import { PlatformPage } from './pages/Platform';
 import { PosPage } from './pages/Pos';
 import { ProductsPage } from './pages/Products';
 import { PurchasesPage } from './pages/Purchases';
@@ -43,6 +44,7 @@ export function App() {
     <Routes>
       <Route path="/ingresar" element={<LoginPage />} />
       <Route path="/recuperar" element={<ResetPage />} />
+      <Route path="/plataforma" element={<PlatformPage />} />
       <Route element={<ProtectedArea />}>
         <Route path="/tablero" element={<DashboardPage />} />
         <Route path="/pos" element={<PosPage />} />
