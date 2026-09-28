@@ -35,6 +35,14 @@ interface PendingPayment {
   createdAt: string;
 }
 
+interface TenantUsage {
+  tenant_id: string;
+  products: number;
+  warehouses: number;
+  sales_month: { count: number; revenue: string };
+  documents: { count: number; bytes: number };
+}
+
 interface AuditEntry {
   actorEmail: string;
   action: string;
@@ -56,6 +64,8 @@ export function PlatformPage() {
   const [tenants, setTenants] = useState<PlatformTenant[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [payments, setPayments] = useState<PendingPayment[]>([]);
+  const [usage, setUsage] = useState<Record<string, TenantUsage>>({});
+  const [rotation, setRotation] = useState<{ otpauthUri: string; secret: string } | null>(null);
 
   async function platformFetch(path: string, init: RequestInit = {}): Promise<Response> {
     const headers = new Headers(init.headers);
@@ -67,10 +77,11 @@ export function PlatformPage() {
   }
 
   async function cargar(): Promise<void> {
-    const [negocios, auditoria, pagos] = await Promise.all([
+    const [negocios, auditoria, pagos, uso] = await Promise.all([
       platformFetch('/platform/tenants'),
       platformFetch('/platform/audit?limit=20'),
-      platformFetch('/platform/payments')
+      platformFetch('/platform/payments'),
+      platformFetch('/platform/usage')
     ]);
 
     if (negocios.ok) {
@@ -82,6 +93,28 @@ export function PlatformPage() {
     if (pagos.ok) {
       setPayments(((await pagos.json()) as PendingPayment[]) ?? []);
     }
+    if (uso.ok) {
+      const cuerpo = (await uso.json()) as { data?: TenantUsage[] };
+      setUsage(Object.fromEntries((cuerpo.data ?? []).map((fila) => [fila.tenant_id, fila])));
+    }
+  }
+
+  /**
+   * Rota el segundo factor del operador (F6.6): el secreto viejo deja de servir
+   * en el acto. La URI nueva se muestra UNA vez; despues no se puede recuperar.
+   */
+  async function rotarSegundoFactor(): Promise<void> {
+    setError(null);
+    setRotation(null);
+    const response = await platformFetch('/platform/totp/rotate', { method: 'POST' });
+
+    if (!response.ok) {
+      const body = (await response.json()) as { message?: string };
+      setError(body.message ?? 'No fue posible rotar el segundo factor');
+      return;
+    }
+
+    setRotation((await response.json()) as { otpauthUri: string; secret: string });
   }
 
   /** Registra el pago de una intencion: extiende el plan por su ciclo (F6.6). */
@@ -273,6 +306,7 @@ export function PlatformPage() {
                   <th className="pb-3">Plan</th>
                   <th className="pb-3">Estado</th>
                   <th className="pb-3">Usuarios</th>
+                  <th className="pb-3">Uso</th>
                   <th className="pb-3">Renueva</th>
                   <th className="pb-3 text-right">Acciones</th>
                 </tr>
@@ -297,6 +331,22 @@ export function PlatformPage() {
                     </td>
                     <td className="py-3 text-slate-700">
                       {tenant.activeUsers} de {tenant.maxUsers}
+                    </td>
+                    <td className="py-3 text-xs text-slate-600">
+                      {usage[tenant.id] ? (
+                        <>
+                          <p>
+                            {usage[tenant.id].products} productos · {usage[tenant.id].warehouses}{' '}
+                            bodegas
+                          </p>
+                          <p>
+                            {usage[tenant.id].sales_month.count} ventas del mes ·{' '}
+                            {usage[tenant.id].documents.count} documentos
+                          </p>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="py-3 text-slate-600">{tenant.planRenewsAt ?? '—'}</td>
                     <td className="py-3">
@@ -363,6 +413,27 @@ export function PlatformPage() {
               </table>
             </div>
           )}
+        </Card>
+
+        <Card title="Seguridad del operador">
+          <div className="space-y-3 text-sm">
+            <p className="text-slate-600">
+              Si pierdes el autenticador, rota el segundo factor: el código viejo deja de servir en
+              el acto y la URI nueva se muestra una sola vez.
+            </p>
+            <Button variant="secondary" onClick={() => void rotarSegundoFactor()}>
+              Rotar segundo factor
+            </Button>
+            {rotation && (
+              <div className="space-y-2 rounded-xl bg-amber-50 px-3.5 py-3 text-amber-900">
+                <p className="font-medium">Escanéala ahora: no se volverá a mostrar.</p>
+                <p className="font-mono text-xs break-all">{rotation.otpauthUri}</p>
+                <p className="text-xs">
+                  Clave manual: <span className="font-mono">{rotation.secret}</span>
+                </p>
+              </div>
+            )}
+          </div>
         </Card>
 
         <Card title="Auditoría de plataforma">
