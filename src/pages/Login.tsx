@@ -14,8 +14,10 @@ const highlights = [
 
 export function LoginPage() {
   const { user, signIn } = useAuth();
-  const [email, setEmail] = useState('admin@kubo.local');
-  const [password, setPassword] = useState('Admin123!');
+  // En desarrollo se precargan las credenciales de la semilla; el paquete de
+  // produccion no las lleva (Vite reemplaza `import.meta.env.DEV` por false).
+  const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@kubo.local' : '');
+  const [password, setPassword] = useState(import.meta.env.DEV ? 'Admin123!' : '');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // Segundo paso del acceso (P-30): el desafio y el codigo del autenticador.
@@ -181,10 +183,12 @@ export function LoginPage() {
             ¿Olvidaste tu contraseña?
           </Link>
 
-          <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs text-slate-500">
-            Demo: <strong>admin@kubo.local</strong> / <strong>Admin123!</strong> — también hay un
-            usuario vendedor con menos permisos.
-          </p>
+          {import.meta.env.DEV && (
+            <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs text-slate-500">
+              Demo: <strong>admin@kubo.local</strong> / <strong>Admin123!</strong> — también hay un
+              usuario vendedor con menos permisos.
+            </p>
+          )}
         </form>
         )}
       </section>

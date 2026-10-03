@@ -61,6 +61,14 @@ export async function removePendingSale(id: string): Promise<void> {
   await transaction('readwrite', (store) => store.delete(id));
 }
 
+/**
+ * Vacia la cola. Se usa al cerrar sesion: en un equipo compartido, el vendedor
+ * siguiente no puede sincronizar las ventas del anterior con su propia sesion.
+ */
+export async function clearPendingSales(): Promise<void> {
+  await transaction('readwrite', (store) => store.clear());
+}
+
 export async function countPendingSales(): Promise<number> {
   const total = await transaction<number>('readonly', (store) => store.count());
   return total;

@@ -120,11 +120,20 @@ export function CustomersPage() {
     setModalOpen(true);
   }
 
-  function openEdit(customer: Customer): void {
+  async function openEdit(customer: Customer): Promise<void> {
     setEditing(customer);
     setForm(toForm(customer));
     setError(null);
     setModalOpen(true);
+
+    // El listado entrega documento y telefono enmascarados: se pide el detalle
+    // (que los revela) para editar sobre el valor real y no re-cifrar la mascara.
+    try {
+      const detalle = await apiFetch<ApiItem<Customer>>(`/customers/${customer.id}`);
+      setForm(toForm(detalle.data));
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'No fue posible cargar el cliente');
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {

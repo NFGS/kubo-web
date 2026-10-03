@@ -54,8 +54,15 @@ export function QueueProvider({ children }: { children: ReactNode }) {
           });
           await removePendingSale(item.id);
         } catch (error) {
-          // Un error de validación (producto inexistente, stock insuficiente) no se
-          // reintenta: se descarta para no bloquear la cola. Los errores de red sí.
+          // 401/403: la sesion vencio o el usuario no tiene permiso. La venta NO
+          // se pierde: se detiene la cola (el API avisa al AuthProvider para
+          // volver a ingresar) y se reenvia en la siguiente sincronizacion.
+          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+            break;
+          }
+          // Otro error de validacion (producto inexistente, stock insuficiente,
+          // conflicto) no se reintenta: se descarta para no bloquear la cola.
+          // Los errores de red y del servidor si: se corta y se reintenta luego.
           if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
             await removePendingSale(item.id);
           } else {

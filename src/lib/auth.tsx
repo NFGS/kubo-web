@@ -8,6 +8,7 @@ import {
   type ReactNode
 } from 'react';
 import { apiFetch, logout as apiLogout, purgeCaches, refreshSession, setUnauthorizedHandler } from './api';
+import { clearPendingSales } from './offline';
 import { queryClient } from './query';
 import type { User } from './types';
 
@@ -37,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiLogout();
     await purgeCaches();
     queryClient.clear();
+    // La cola offline es del vendedor que se va: el siguiente no puede
+    // sincronizar ventas ajenas con su sesion.
+    await clearPendingSales();
     setUser(null);
   }, []);
 
