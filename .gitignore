@@ -14,3 +14,4 @@ blob-report/
 
 # Artefacto de build de TypeScript (se regenera en cada typecheck)
 tsconfig.tsbuildinfo
+/pacts/

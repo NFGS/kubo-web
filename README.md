@@ -118,9 +118,13 @@ código nunca necesita saber en qué puerto corre cada servicio.
 - **Auditoría axe** en cada pantalla: el gate falla ante violaciones graves o
   críticas de WCAG 2 A/AA. La Fase 2 corrigió tres defectos reales (contrastes y
   un `select` sin nombre accesible).
-- **Pruebas unitarias (vitest)**: la cola offline (IndexedDB) y la política de
-  errores de sincronización, con gate de cobertura v8: líneas/funciones/
-  statements ≥ 85 y ramas ≥ 65 (hoy líneas 100 %).
+- **Pruebas unitarias (vitest)**: 29 pruebas sobre la cola offline
+  (IndexedDB), la política de errores, el formato es-CO, el sistema de diseño y
+  la pantalla de ingreso, con gate de cobertura v8: líneas/funciones/statements
+  ≥ 85 y ramas ≥ 65 (hoy líneas 100 %, ramas 91 %).
+- **Contratos del consumidor (Pact)**: `src/pact/consumer.pact.test.ts` declara
+  4 interacciones y `make pact` las verifica contra el sistema vivo; corre en
+  `make ci`.
 - **Caché por sesión**: al entrar y salir se purgan las cachés del service worker
   y las consultas, para que un equipo compartido nunca sirva datos del usuario
   anterior.
