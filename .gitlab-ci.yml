@@ -17,6 +17,7 @@ web:test:
   script:
     - npm ci
     - npm run typecheck
+    - npm test
     - npm run build
 
 # E2E + accesibilidad contra un entorno levantado. Se dispara cuando existe

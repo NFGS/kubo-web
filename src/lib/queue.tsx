@@ -9,8 +9,9 @@ import {
   type ReactNode
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiError, apiFetch } from './api';
+import { apiFetch } from './api';
 import { countPendingSales, enqueueSale, listPendingSales, removePendingSale } from './offline';
+import { decidirAnteError } from './queue-policy';
 import type { ApiItem, NewSalePayload, Sale } from './types';
 
 interface QueueState {
@@ -54,16 +55,10 @@ export function QueueProvider({ children }: { children: ReactNode }) {
           });
           await removePendingSale(item.id);
         } catch (error) {
-          // 401/403: la sesion vencio o el usuario no tiene permiso. La venta NO
-          // se pierde: se detiene la cola (el API avisa al AuthProvider para
-          // volver a ingresar) y se reenvia en la siguiente sincronizacion.
-          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-            break;
-          }
-          // Otro error de validacion (producto inexistente, stock insuficiente,
-          // conflicto) no se reintenta: se descarta para no bloquear la cola.
-          // Los errores de red y del servidor si: se corta y se reintenta luego.
-          if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+          // La politica vive en un modulo puro y probado (queue-policy.ts):
+          // un 4xx de negocio se descarta; 401/403 y los fallos de red detienen
+          // la cola para reintentar (la venta no se pierde por sesion vencida).
+          if (decidirAnteError(error) === 'descartar') {
             await removePendingSale(item.id);
           } else {
             break;

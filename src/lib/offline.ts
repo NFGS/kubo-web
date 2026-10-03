@@ -10,6 +10,17 @@ const DB_NAME = 'kubo-offline';
 const DB_VERSION = 1;
 const STORE = 'pending-sales';
 
+// Dos ventas encoladas en el mismo milisegundo compartirian `createdAt` y el
+// orden de envio quedaria al azar (las claves del store son UUID). El sello es
+// estrictamente creciente: la cola siempre sincroniza en el orden real.
+let ultimoSello = 0;
+
+function selloMonotonico(): string {
+  const ahora = Date.now();
+  ultimoSello = ahora > ultimoSello ? ahora : ultimoSello + 1;
+  return new Date(ultimoSello).toISOString();
+}
+
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -45,7 +56,7 @@ export async function enqueueSale(payload: NewSalePayload, label: string): Promi
   const pending: PendingSale = {
     id: crypto.randomUUID(),
     payload,
-    createdAt: new Date().toISOString(),
+    createdAt: selloMonotonico(),
     label
   };
   await transaction('readwrite', (store) => store.add(pending));
