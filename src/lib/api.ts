@@ -108,11 +108,11 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 /**
- * Descarga un reporte CSV respetando la sesión (Bearer + refresco) y lo guarda
- * con `filename`. El endpoint exige el token, por eso se usa un blob y no un
- * enlace directo.
+ * Descarga un archivo respetando la sesión (Bearer + refresco) y lo guarda con
+ * `filename`. El endpoint exige el token, por eso se usa un blob y no un enlace
+ * directo. Sirve para los reportes CSV y para los documentos (XML, PDF).
  */
-export async function downloadCsv(path: string, filename: string): Promise<void> {
+export async function downloadFile(path: string, filename: string): Promise<void> {
   let response = await send(path, { method: 'GET' });
 
   if (response.status === 401) {

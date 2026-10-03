@@ -346,3 +346,16 @@ export interface AppNotification {
   sent_at: string | null;
   created_at: string | null;
 }
+
+/** Documento del negocio (P-25): metadatos; el contenido se descarga aparte. */
+export interface DocumentItem {
+  id: string;
+  kind: string;
+  filename: string;
+  content_type: string;
+  size: number;
+  sha256: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  created_at: string | null;
+}

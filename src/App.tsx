@@ -6,6 +6,7 @@ import { PackProvider } from './lib/pack';
 import { CashPage } from './pages/Cash';
 import { CustomersPage } from './pages/Customers';
 import { DashboardPage } from './pages/Dashboard';
+import { DocumentsPage } from './pages/Documents';
 import { LoginPage } from './pages/Login';
 import { NotificationsPage } from './pages/Notifications';
 import { PlatformPage } from './pages/Platform';
@@ -56,6 +57,7 @@ export function App() {
         <Route path="/configuracion" element={<SettingsPage />} />
         <Route path="/bodegas" element={<WarehousesPage />} />
         <Route path="/notificaciones" element={<NotificationsPage />} />
+        <Route path="/documentos" element={<DocumentsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/tablero" replace />} />
     </Routes>

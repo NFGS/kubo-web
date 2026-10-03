@@ -32,6 +32,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 | `/bodegas` | Bodegas y transferencias | Bodegas del negocio, stock por bodega y transferencias |
 | `/usuarios` | Usuarios y roles | El propietario crea, edita, habilita y deshabilita usuarios |
 | `/notificaciones` | Notificaciones | Buzón del negocio (avisos de stock, compras y resumen) |
+| `/documentos` | Documentos | Facturas XML, notas crédito, comprobantes PDF y soportes, con descarga autenticada |
 | `/configuracion` | Configuración | Vertical, zona horaria, uso contra el plan, pagos y segundo factor |
 | `/plataforma` | Panel del operador | Acceso propio con TOTP: negocios, suspensión, pagos, uso y auditoría |
 
@@ -51,7 +52,7 @@ src/
 │   ├── ui.tsx        sistema de diseño: botón, tarjeta, campo, modal, insignia
 │   ├── Layout.tsx    navegación, estado de conexión y cola pendiente
 │   └── Toaster.tsx   avisos al usuario
-└── pages/            las páginas de la aplicación (13 rutas)
+└── pages/            las páginas de la aplicación (14 rutas)
 ```
 
 ## Seguridad en el navegador
@@ -111,7 +112,7 @@ código nunca necesita saber en qué puerto corre cada servicio.
 ## Calidad y accesibilidad (Fase 2)
 
 - **E2E con Playwright** (`e2e/accessibility.spec.ts`): 5 pruebas que recorren el
-  ingreso, el tablero, la recuperación, el panel de plataforma y nueve pantallas
+  ingreso, el tablero, la recuperación, el panel de plataforma y diez pantallas
   del negocio. Usa el Chrome del sistema en local (`channel: 'chrome'`) y
   chromium en CI.
 - **Auditoría axe** en cada pantalla: el gate falla ante violaciones graves o

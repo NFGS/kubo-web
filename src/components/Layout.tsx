@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import {
   BellRing,
   CloudOff,
+  FileText,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -35,6 +36,7 @@ export function Layout() {
     { to: '/caja', label: 'Caja', icon: Wallet },
     { to: '/bodegas', label: 'Bodegas', icon: Warehouse },
     { to: '/notificaciones', label: 'Notificaciones', icon: BellRing },
+    { to: '/documentos', label: 'Documentos', icon: FileText },
     { to: '/usuarios', label: 'Usuarios', icon: Users },
     { to: '/clientes', label: 'Clientes', icon: Users },
     { to: '/configuracion', label: 'Configuración', icon: Settings }

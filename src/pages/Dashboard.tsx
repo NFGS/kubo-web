@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 import { useState } from 'react';
 import { CloudOff, Coins, Download, Package, Receipt, TrendingUp, Users } from 'lucide-react';
-import { apiFetch, downloadCsv } from '../lib/api';
+import { apiFetch, downloadFile } from '../lib/api';
 import { compactMoney, dateTime, money, number, paymentLabels, shortDate } from '../lib/format';
 import { useQueue } from '../lib/queue';
 import { useToast } from '../components/Toaster';
@@ -91,7 +91,7 @@ export function DashboardPage() {
   async function exportSales() {
     setExporting(true);
     try {
-      await downloadCsv('/reports/sales.csv', 'ventas.csv');
+      await downloadFile('/reports/sales.csv', 'ventas.csv');
       notify('Reporte de ventas descargado', 'success');
     } catch (caught) {
       notify(caught instanceof Error ? caught.message : 'No fue posible exportar las ventas', 'error');

@@ -11,7 +11,7 @@ import {
   Trash2,
   Upload
 } from 'lucide-react';
-import { ApiError, apiFetch, downloadCsv } from '../lib/api';
+import { ApiError, apiFetch, downloadFile } from '../lib/api';
 import { money, number } from '../lib/format';
 import { useToast } from '../components/Toaster';
 import { usePack } from '../lib/pack';
@@ -76,7 +76,7 @@ export function ProductsPage() {
   async function exportInventory() {
     setExporting(true);
     try {
-      await downloadCsv('/reports/inventory.csv', 'inventario.csv');
+      await downloadFile('/reports/inventory.csv', 'inventario.csv');
       notify('Inventario exportado', 'success');
     } catch (caught) {
       notify(caught instanceof Error ? caught.message : 'No fue posible exportar el inventario', 'error');

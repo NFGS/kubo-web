@@ -90,6 +90,10 @@ test('productos, clientes y POS son accesibles', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /notificaciones/i })).toBeVisible();
   await auditar(page);
 
+  await page.goto('/documentos');
+  await expect(page.getByRole('heading', { name: /^documentos$/i })).toBeVisible();
+  await auditar(page);
+
   await page.goto('/bodegas');
   await expect(page.getByRole('heading', { name: /bodegas y transferencias/i })).toBeVisible();
   await auditar(page);
