@@ -1,10 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Truck, Undo2 } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
 import { dateTime, money, number } from '../lib/format';
 import { useToast } from '../components/Toaster';
-import type { ApiItem, ApiList, Product, Purchase, Supplier } from '../lib/types';
+import type { ApiItem, ApiList, Product, Purchase, Supplier, Warehouse } from '../lib/types';
 import { Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, Select, Spinner } from '../components/ui';
 
 interface SupplierForm {
@@ -37,8 +37,9 @@ const emptyLine: PurchaseLine = { product_id: '', quantity: '1', unit_cost: '' }
  * Compras y proveedores (P-15).
  *
  * Cierra el ciclo del inventario: la mercancia entra por una compra con su
- * proveedor y su costo, no por un ajuste manual. Cada linea suma stock, deja el
- * kardex y actualiza el costo del producto con el valor sin IVA.
+ * proveedor y su costo, no por un ajuste manual. Cada linea suma stock en la
+ * bodega elegida, deja el kardex y actualiza el costo del producto con el valor
+ * sin IVA.
  */
 export function PurchasesPage() {
   const queryClient = useQueryClient();
@@ -47,6 +48,7 @@ export function PurchasesPage() {
   const [supplierForm, setSupplierForm] = useState<SupplierForm>(emptySupplier);
   const [purchaseModal, setPurchaseModal] = useState(false);
   const [supplierId, setSupplierId] = useState('');
+  const [warehouseId, setWarehouseId] = useState('');
   const [lines, setLines] = useState<PurchaseLine[]>([{ ...emptyLine }]);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,24 @@ export function PurchasesPage() {
     queryKey: ['products', 'for-purchases'],
     queryFn: () => apiFetch<ApiList<Product>>('/products?limit=200')
   });
+
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'purchases'],
+    queryFn: () => apiFetch<{ data: Warehouse[] }>('/warehouses')
+  });
+
+  const bodegas = useMemo(() => {
+    const lista = warehouses.data?.data ?? [];
+    const porDefecto = lista.find((warehouse) => warehouse.is_default);
+    // La bodega por defecto va primera y preseleccionada (P-22).
+    return porDefecto ? [porDefecto, ...lista.filter((row) => !row.is_default)] : lista;
+  }, [warehouses.data]);
+
+  useEffect(() => {
+    if (!warehouseId && bodegas.length > 0) {
+      setWarehouseId(bodegas[0].id);
+    }
+  }, [bodegas, warehouseId]);
 
   const purchases = useQuery({
     queryKey: ['purchases'],
@@ -97,6 +117,7 @@ export function PurchasesPage() {
         method: 'POST',
         body: JSON.stringify({
           supplier_id: supplierId,
+          warehouse_id: warehouseId || null,
           notes: notes || null,
           items: lines
             .filter((line) => line.product_id)
@@ -112,9 +133,11 @@ export function PurchasesPage() {
       setPurchaseModal(false);
       setLines([{ ...emptyLine }]);
       setNotes('');
+      setWarehouseId('');
       setError(null);
       await queryClient.invalidateQueries({ queryKey: ['purchases'] });
       await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (caught) => {
@@ -341,6 +364,21 @@ export function PurchasesPage() {
               {supplierRows.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
                   {supplier.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Bodega de entrada">
+            <Select
+              required
+              value={warehouseId}
+              onChange={(event) => setWarehouseId(event.target.value)}
+            >
+              <option value="">Selecciona una bodega…</option>
+              {bodegas.map((warehouse) => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name}
                 </option>
               ))}
             </Select>
