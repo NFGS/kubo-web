@@ -296,6 +296,28 @@ export interface Tenant {
   activeUsers?: number;
   /** Fecha hasta la que esta pagado el plan (F6.2). */
   planRenewsAt?: string | null;
+  /** Datos fiscales del emisor (DIAN): viajan en el token hacia el ERP. */
+  taxId?: string | null;
+  taxIdDv?: string | null;
+  fiscalAddress?: string | null;
+  taxRegime?: string | null;
+  invoiceResolution?: string | null;
+  invoicePrefix?: string | null;
+}
+
+/** Factura electronica emitida (P-18). */
+export interface Invoice {
+  id: string;
+  sale_id: string;
+  number: string;
+  cufe: string;
+  qr_url: string;
+  provider: string;
+  status: string;
+  status_detail?: string | null;
+  provider_reference?: string | null;
+  issued_at: string;
+  xml: string;
 }
 
 /** Bodega o local donde hay existencia (P-22). */

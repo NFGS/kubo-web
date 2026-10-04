@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CloudOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from 'lucide-react';
+import { CloudOff, FileText, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { ApiError, apiFetch } from '../lib/api';
 import { money, number, paymentLabels } from '../lib/format';
 import { printReceipt } from '../lib/receipt';
@@ -11,6 +11,7 @@ import type {
   ApiItem,
   ApiList,
   Customer,
+  Invoice,
   NewSalePayload,
   Product,
   Sale,
@@ -37,6 +38,33 @@ export function PosPage() {
   const [warehouseId, setWarehouseId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [invoicing, setInvoicing] = useState(false);
+
+  /** Emite la factura electronica de la ultima venta (idempotente en el ERP). */
+  async function facturar(): Promise<void> {
+    if (!lastSale) {
+      return;
+    }
+
+    setInvoiceError(null);
+    setInvoicing(true);
+
+    try {
+      const respuesta = await apiFetch<ApiItem<Invoice>>(`/sales/${lastSale.id}/invoice`, {
+        method: 'POST'
+      });
+      setInvoice(respuesta.data);
+      notify(`Factura ${respuesta.data.number} emitida`, 'success');
+    } catch (caught) {
+      setInvoiceError(
+        caught instanceof ApiError ? caught.message : 'No fue posible facturar la venta'
+      );
+    } finally {
+      setInvoicing(false);
+    }
+  }
 
   const products = useQuery({
     queryKey: ['products', 'pos'],
@@ -273,12 +301,27 @@ export function PosPage() {
                 Última venta: <strong>{lastSale.number}</strong> por {money(lastSale.total)} (
                 {paymentLabels[lastSale.payment_method] ?? lastSale.payment_method})
               </span>
-              <Button variant="secondary" onClick={() => printReceipt(lastSale)}>
-                <Printer className="h-4 w-4" aria-hidden />
-                Imprimir comprobante
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => printReceipt(lastSale)}>
+                  <Printer className="h-4 w-4" aria-hidden />
+                  Imprimir comprobante
+                </Button>
+                <Button variant="secondary" loading={invoicing} onClick={() => void facturar()}>
+                  <FileText className="h-4 w-4" aria-hidden />
+                  Facturar
+                </Button>
+              </div>
             </div>
           )}
+
+          {invoice && (
+            <p className="mb-3 rounded-xl bg-kubo-50 px-3.5 py-2.5 text-xs text-kubo-700">
+              Factura <strong>{invoice.number}</strong> · CUFE {invoice.cufe.slice(0, 12)}… · estado{' '}
+              {invoice.status}
+            </p>
+          )}
+
+          <ErrorNote message={invoiceError} />
 
           {cart.length === 0 ? (
             <EmptyState title="Carrito vacío" description="Agrega productos desde el catálogo." />

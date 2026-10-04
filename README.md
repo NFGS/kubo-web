@@ -23,7 +23,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 | `/ingresar` | Ingreso | Autenticación contra el gateway |
 | `/recuperar` | Recuperación | Pide el enlace por correo y, con `?token=`, cambia la contraseña |
 | `/tablero` | Tablero | KPIs, serie de 14 días, top productos, medios de pago, últimas ventas |
-| `/pos` | Punto de venta | Carrito, cliente, medio de pago y cobro con soporte offline |
+| `/pos` | Punto de venta | Carrito, cliente, medio de pago, cobro con soporte offline y **facturar** la última venta |
 | `/productos` | Catálogo | CRUD de productos y ajustes de inventario |
 | `/compras` | Compras y proveedores | Alta de proveedores, registro de compras con líneas y anulación (suma inventario y costo) |
 | `/clientes` | Clientes | CRUD con documento y teléfono enmascarados en el listado; el detalle los revela |
@@ -33,7 +33,7 @@ de Workbox permite que la caja siga vendiendo sin internet.
 | `/usuarios` | Usuarios y roles | El propietario crea, edita, habilita y deshabilita usuarios |
 | `/notificaciones` | Notificaciones | Buzón del negocio (avisos de stock, compras y resumen) |
 | `/documentos` | Documentos | Facturas XML, notas crédito, comprobantes PDF y soportes, con descarga autenticada |
-| `/configuracion` | Configuración | Vertical, zona horaria, uso contra el plan, pagos y segundo factor |
+| `/configuracion` | Configuración | Vertical, zona horaria, **datos fiscales (DIAN)**, uso contra el plan, pagos y segundo factor |
 | `/plataforma` | Panel del operador | Acceso propio con TOTP: negocios, suspensión, pagos, uso y auditoría |
 
 ## Arquitectura del cliente

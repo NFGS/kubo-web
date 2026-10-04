@@ -35,6 +35,13 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [vertical, setVertical] = useState('');
   const [timezone, setTimezone] = useState('');
+  const [fiscal, setFiscal] = useState({
+    taxId: '',
+    fiscalAddress: '',
+    taxRegime: '',
+    invoiceResolution: '',
+    invoicePrefix: ''
+  });
 
   const tenant = useQuery({
     queryKey: ['tenant'],
@@ -50,6 +57,13 @@ export function SettingsPage() {
     if (tenant.data) {
       setVertical(tenant.data.data.vertical);
       setTimezone(tenant.data.data.timezone);
+      setFiscal({
+        taxId: tenant.data.data.taxId ?? '',
+        fiscalAddress: tenant.data.data.fiscalAddress ?? '',
+        taxRegime: tenant.data.data.taxRegime ?? '',
+        invoiceResolution: tenant.data.data.invoiceResolution ?? '',
+        invoicePrefix: tenant.data.data.invoicePrefix ?? ''
+      });
     }
   }, [tenant.data]);
 
@@ -67,6 +81,31 @@ export function SettingsPage() {
     },
     onError: (caught) =>
       setError(caught instanceof ApiError ? caught.message : 'No fue posible guardar los cambios')
+  });
+
+  /** Datos fiscales del emisor (DIAN): viajan en el token, por eso se refresca la sesión. */
+  const saveFiscal = useMutation({
+    mutationFn: () =>
+      apiFetch<ApiItem<Tenant>>('/tenants/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          tax_id: fiscal.taxId || null,
+          fiscal_address: fiscal.fiscalAddress || null,
+          tax_regime: fiscal.taxRegime || null,
+          invoice_resolution: fiscal.invoiceResolution || null,
+          invoice_prefix: fiscal.invoicePrefix || null
+        })
+      }),
+    onSuccess: async () => {
+      setError(null);
+      await refreshSession();
+      await queryClient.invalidateQueries();
+      notify('Datos fiscales guardados', 'success');
+    },
+    onError: (caught) =>
+      setError(
+        caught instanceof ApiError ? caught.message : 'No fue posible guardar los datos fiscales'
+      )
   });
 
   const seed = useMutation({
@@ -291,6 +330,78 @@ export function SettingsPage() {
             </Button>
           )}
         </div>
+      </Card>
+
+      <Card title="Datos fiscales (DIAN)">
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            saveFiscal.mutate();
+          }}
+        >
+          <p className="text-sm text-slate-600">
+            El proveedor tecnológico los usa para emitir la factura electrónica. El dígito de
+            verificación del NIT lo calcula el sistema.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="NIT" hint="Solo números, sin dígito de verificación">
+              <Input
+                value={fiscal.taxId}
+                inputMode="numeric"
+                placeholder="900123456"
+                onChange={(event) =>
+                  setFiscal({ ...fiscal, taxId: event.target.value.replace(/\D/g, '') })
+                }
+              />
+            </Field>
+            <Field label="Dígito de verificación" hint="Calculado por el sistema">
+              <Input value={tenant.data?.data.taxIdDv ?? '—'} readOnly />
+            </Field>
+            <Field label="Dirección fiscal">
+              <Input
+                value={fiscal.fiscalAddress}
+                placeholder="Calle 1 # 2-3, Armenia"
+                onChange={(event) => setFiscal({ ...fiscal, fiscalAddress: event.target.value })}
+              />
+            </Field>
+            <Field label="Régimen tributario">
+              <Select
+                value={fiscal.taxRegime}
+                onChange={(event) => setFiscal({ ...fiscal, taxRegime: event.target.value })}
+              >
+                <option value="">Sin definir</option>
+                <option value="RESPONSABLE_IVA">Responsable de IVA</option>
+                <option value="NO_RESPONSABLE_IVA">No responsable de IVA</option>
+                <option value="SIMPLE">Régimen simple</option>
+              </Select>
+            </Field>
+            <Field label="Resolución de facturación">
+              <Input
+                value={fiscal.invoiceResolution}
+                placeholder="Resolución DIAN 18764"
+                onChange={(event) =>
+                  setFiscal({ ...fiscal, invoiceResolution: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Prefijo de factura" hint="Alfanumérico de 1 a 6 caracteres">
+              <Input
+                value={fiscal.invoicePrefix}
+                maxLength={6}
+                placeholder="FE"
+                onChange={(event) => setFiscal({ ...fiscal, invoicePrefix: event.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="flex justify-end">
+            <Button type="submit" loading={saveFiscal.isPending}>
+              Guardar datos fiscales
+            </Button>
+          </div>
+        </form>
       </Card>
 
       {tenant.isLoading || packs.isLoading ? (
