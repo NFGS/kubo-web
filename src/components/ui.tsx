@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { Loader2, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react';
 
 export function Card({
@@ -152,6 +153,69 @@ export function Modal({
   title: string;
   children: ReactNode;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Accesibilidad del dialogo: el foco entra al abrir, Tab no se escapa del
+  // panel (focus trap), Escape cierra y al cerrar el foco vuelve a donde estaba.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const panel = panelRef.current;
+    if (!panel) {
+      return;
+    }
+
+    const previo = document.activeElement as HTMLElement | null;
+    const enfocables = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
+    (enfocables()[0] ?? panel).focus();
+
+    const alPresionar = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const lista = enfocables();
+      if (lista.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const actual = document.activeElement as HTMLElement;
+      const indice = lista.indexOf(actual);
+
+      if (event.shiftKey) {
+        if (indice <= 0) {
+          event.preventDefault();
+          lista[lista.length - 1].focus();
+        }
+      } else if (indice === -1 || indice === lista.length - 1) {
+        event.preventDefault();
+        lista[0].focus();
+      }
+    };
+
+    document.addEventListener('keydown', alPresionar, true);
+    return () => {
+      document.removeEventListener('keydown', alPresionar, true);
+      previo?.focus?.();
+    };
+  }, [open, onClose]);
+
   if (!open) {
     return null;
   }
@@ -162,7 +226,11 @@ export function Modal({
       aria-modal="true"
       aria-label={title}
     >
-      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl"
+      >
         <header className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
           <button

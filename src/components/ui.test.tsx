@@ -105,6 +105,40 @@ describe('sistema de diseno', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('el modal atrapa el foco, cicla con Tab y cierra con Escape', async () => {
+    const onClose = vi.fn();
+    render(
+      <Modal open onClose={onClose} title="Registrar compra">
+        <button type="button">Primero</button>
+        <button type="button">Ultimo</button>
+      </Modal>
+    );
+
+    const cerrar = screen.getByRole('button', { name: 'Cerrar' });
+    const primero = screen.getByRole('button', { name: 'Primero' });
+    const ultimo = screen.getByRole('button', { name: 'Ultimo' });
+
+    // Al abrir, el foco entra al dialogo (primer elemento enfocable).
+    expect(document.activeElement).toBe(cerrar);
+
+    await userEvent.tab();
+    expect(document.activeElement).toBe(primero);
+
+    await userEvent.tab();
+    expect(document.activeElement).toBe(ultimo);
+
+    // Tab en el ultimo vuelve al primero: el foco no se escapa del panel.
+    await userEvent.tab();
+    expect(document.activeElement).toBe(cerrar);
+
+    // Shift+Tab en el primero salta al ultimo.
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(ultimo);
+
+    await userEvent.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('la insignia, el vacio y el spinner se renderizan', () => {
     render(
       <>
