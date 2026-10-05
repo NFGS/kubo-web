@@ -1,5 +1,7 @@
 # kubo-web
 
+> Parte del proyecto **Kubo** — [kubo-workspace](https://github.com/NFGS/kubo-workspace) (ERP + CRM autoalojable para PYMES).
+
 Aplicación web instalable (PWA) de Kubo. Es la cara del sistema para el dueño del
 negocio y sus vendedores.
 
