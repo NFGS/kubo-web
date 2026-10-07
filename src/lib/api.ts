@@ -1,3 +1,4 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import type { TokenResponse, TotpChallenge, TotpSetup, User } from './types';
 
 const DEFAULT_BASE = '/api/v1';
@@ -47,15 +48,68 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
-async function send(path: string, init: RequestInit): Promise<Response> {
+function cabeceras(init: RequestInit, conToken: boolean): Headers {
   const headers = new Headers(init.headers);
-  if (!headers.has('Content-Type') && init.body) {
+  if (init.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-  if (accessToken) {
+  if (conToken && accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
-  return fetch(`${baseUrl}${path}`, { ...init, headers, credentials: 'same-origin' });
+  return headers;
+}
+
+function base64ABytes(base64: string): Uint8Array<ArrayBuffer> {
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i += 1) {
+    bytes[i] = binario.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Peticion base. En la web usa `fetch` (misma-origen). En la app movil usa el
+ * puente nativo de Capacitor (`CapacitorHttp`): no pasa por CORS ni por el
+ * proxy del parche de fetch — que resulto fragil en el emulador (2026-10-07) —
+ * y conserva las cookies en el WebView. El contrato es identico en ambos.
+ */
+async function pedir(
+  path: string,
+  init: RequestInit = {},
+  opciones: { conToken?: boolean; binario?: boolean } = {}
+): Promise<Response> {
+  const conToken = opciones.conToken ?? true;
+  const headers = cabeceras(init, conToken);
+  const url = `${baseUrl}${path}`;
+
+  if (Capacitor.isNativePlatform()) {
+    const respuesta = await CapacitorHttp.request({
+      url,
+      method: (init.method ?? 'GET').toUpperCase(),
+      headers: Object.fromEntries(headers.entries()),
+      data: init.body ? JSON.parse(String(init.body)) : undefined,
+      responseType: opciones.binario ? 'blob' : undefined
+    });
+    const cabecerasRespuesta = respuesta.headers as Record<string, string>;
+
+    if (opciones.binario) {
+      return new Response(new Blob([base64ABytes(String(respuesta.data ?? ''))]), {
+        status: respuesta.status,
+        headers: cabecerasRespuesta
+      });
+    }
+
+    const cuerpo =
+      respuesta.data === undefined || respuesta.data === null
+        ? null
+        : typeof respuesta.data === 'string'
+          ? respuesta.data
+          : JSON.stringify(respuesta.data);
+    return new Response(cuerpo, { status: respuesta.status, headers: cabecerasRespuesta });
+  }
+
+  return fetch(url, { ...init, headers, credentials: 'same-origin' });
 }
 
 async function parseError(response: Response): Promise<ApiError> {
@@ -78,10 +132,7 @@ export async function refreshSession(): Promise<boolean> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
-        const response = await fetch(`${baseUrl}/auth/refresh`, {
-          method: 'POST',
-          credentials: 'same-origin'
-        });
+        const response = await pedir('/auth/refresh', { method: 'POST' }, { conToken: false });
         if (!response.ok) {
           setAccessToken(null);
           return false;
@@ -100,12 +151,12 @@ export async function refreshSession(): Promise<boolean> {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  let response = await send(path, init);
+  let response = await pedir(path, init);
 
   if (response.status === 401) {
     const refreshed = await refreshSession();
     if (refreshed) {
-      response = await send(path, init);
+      response = await pedir(path, init);
     } else {
       unauthorizedHandler?.();
       throw new ApiError(401, 'SESSION_EXPIRED', 'La sesión expiró, vuelve a ingresar');
@@ -119,7 +170,12 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new ApiError(response.status, 'INVALID_RESPONSE', 'El servidor respondió algo que no es JSON');
+  }
 }
 
 /**
@@ -128,7 +184,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
  * directo. Sirve para los reportes CSV y para los documentos (XML, PDF).
  */
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  let response = await send(path, { method: 'GET' });
+  let response = await pedir(path, { method: 'GET' }, { binario: true });
 
   if (response.status === 401) {
     const refreshed = await refreshSession();
@@ -136,7 +192,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
       unauthorizedHandler?.();
       throw new ApiError(401, 'SESSION_EXPIRED', 'La sesión expiró, vuelve a ingresar');
     }
-    response = await send(path, { method: 'GET' });
+    response = await pedir(path, { method: 'GET' }, { binario: true });
   }
 
   if (!response.ok) {
@@ -156,12 +212,11 @@ export async function downloadFile(path: string, filename: string): Promise<void
 }
 
 export async function login(email: string, password: string): Promise<TokenResponse | TotpChallenge> {
-  const response = await fetch(`${baseUrl}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ email, password })
-  });
+  const response = await pedir(
+    '/auth/login',
+    { method: 'POST', body: JSON.stringify({ email, password }) },
+    { conToken: false }
+  );
   if (!response.ok) {
     throw await parseError(response);
   }
@@ -180,12 +235,11 @@ export async function login(email: string, password: string): Promise<TokenRespo
 
 /** Segundo paso del acceso: desafio + codigo a cambio de la sesion. */
 export async function verifyTotp(challengeToken: string, code: string): Promise<TokenResponse> {
-  const response = await fetch(`${baseUrl}/auth/totp/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ challengeToken, code })
-  });
+  const response = await pedir(
+    '/auth/totp/verify',
+    { method: 'POST', body: JSON.stringify({ challengeToken, code }) },
+    { conToken: false }
+  );
   if (!response.ok) {
     throw await parseError(response);
   }
@@ -210,11 +264,11 @@ export function totpDisable(code: string): Promise<User> {
 
 /** Solicita el enlace de recuperacion. La respuesta no revela si el correo existe. */
 export async function requestPasswordReset(email: string): Promise<void> {
-  const response = await fetch(`${baseUrl}/auth/forgot-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  });
+  const response = await pedir(
+    '/auth/forgot-password',
+    { method: 'POST', body: JSON.stringify({ email }) },
+    { conToken: false }
+  );
   if (!response.ok) {
     throw await parseError(response);
   }
@@ -222,11 +276,11 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
 /** Consume el token del enlace y cambia la contrasena. */
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const response = await fetch(`${baseUrl}/auth/reset-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, newPassword })
-  });
+  const response = await pedir(
+    '/auth/reset-password',
+    { method: 'POST', body: JSON.stringify({ token, newPassword }) },
+    { conToken: false }
+  );
   if (!response.ok) {
     throw await parseError(response);
   }
@@ -234,10 +288,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${baseUrl}/auth/logout`, {
-      method: 'POST',
-      credentials: 'same-origin'
-    });
+    await pedir('/auth/logout', { method: 'POST' }, { conToken: false });
   } catch {
     // si no hay red, la sesion local se cierra igual
   }
