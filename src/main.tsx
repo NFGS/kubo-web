@@ -9,13 +9,14 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ServerSetup } from './components/ServerSetup';
 import { ToastProvider } from './components/Toaster';
 import { AuthProvider } from './lib/auth';
-import { applyNativeConfig, getServerUrl, isNativePlatform } from './lib/native';
+import { applyNativeConfig, getServerUrl, isNativePlatform, setupServiceWorker } from './lib/native';
 import { QueueProvider } from './lib/queue';
 import { queryClient } from './lib/query';
 
-// El service worker se registra de inmediato: la app debe quedar instalable y
-// disponible sin conexión desde la primera visita.
-registerSW({ immediate: true });
+// El service worker se registra en la web (app instalable y disponible sin
+// conexión desde la primera visita). En la app móvil se desregistra: interfiere
+// con el HTTP nativo de Capacitor (ver native.ts).
+setupServiceWorker(() => registerSW({ immediate: true }));
 
 // En la app móvil, la base del API apunta al servidor configurado (ADR-0031);
 // en la web esto no cambia nada: la base sigue siendo relativa.

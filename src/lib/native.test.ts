@@ -11,7 +11,8 @@ import {
   getServerUrl,
   isNativePlatform,
   normalizeServerUrl,
-  saveServerUrl
+  saveServerUrl,
+  setupServiceWorker
 } from './native';
 
 describe('modo nativo (app móvil, ADR-0031)', () => {
@@ -69,5 +70,28 @@ describe('modo nativo (app móvil, ADR-0031)', () => {
     });
     expect(() => saveServerUrl('https://kubo.local')).not.toThrow();
     escribir.mockRestore();
+  });
+
+  it('en web registra el service worker; en la app móvil lo desregistra', async () => {
+    const registrar = vi.fn();
+
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+    setupServiceWorker(registrar);
+    expect(registrar).toHaveBeenCalledTimes(1);
+
+    const desregistrar = vi.fn().mockResolvedValue(true);
+    const getRegistrations = vi.fn().mockResolvedValue([{ unregister: desregistrar }]);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: { getRegistrations }
+    });
+
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    setupServiceWorker(registrar);
+    await vi.waitFor(() => expect(desregistrar).toHaveBeenCalled());
+    expect(registrar).toHaveBeenCalledTimes(1); // no se registró de nuevo
+    expect(getRegistrations).toHaveBeenCalled();
+
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: undefined });
   });
 });

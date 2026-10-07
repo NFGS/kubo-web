@@ -45,3 +45,21 @@ export function applyNativeConfig(): void {
     setApiBase(getServerUrl());
   }
 }
+
+/**
+ * Service worker: es una pieza de la PWA web. En la app móvil se desregistra
+ * (si existe) porque interfiere con el HTTP nativo de Capacitor: los GET
+ * proxeados caerían en el servidor local y devolverían el `index.html`
+ * ("<!DOCTYPE ... no es JSON"), como se comprobó en el emulador (2026-10-07).
+ */
+export function setupServiceWorker(registrar: () => void): void {
+  if (!isNativePlatform()) {
+    registrar();
+    return;
+  }
+
+  void navigator.serviceWorker
+    ?.getRegistrations?.()
+    .then((registros) => registros.forEach((registro) => void registro.unregister()))
+    .catch(() => undefined);
+}
