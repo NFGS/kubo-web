@@ -98,8 +98,12 @@ La PWA se envuelve con **Capacitor** para la app móvil (ADR-0023 y ADR-0031;
 plan por fases en `kubo-docs/14-plan-app-movil.md`):
 
 - **Assets locales**: la app abre sin red desde el primer arranque; el APK es
-  uno solo para todos los negocios (la URL del servidor se configura en el
-  dispositivo — siguiente tramo de la Fase 1).
+  uno solo para todos los negocios.
+- **Modo nativo (ADR-0031)**: al primer arranque la app pide la dirección del
+  servidor del negocio (con botón para usar la demo) y las llamadas al API usan
+  HTTP nativo (`CapacitorHttp`) para conservar la sesión sin CORS. En la web
+  nada cambia: la base sigue siendo `/api/v1` relativa.
+- **Pendiente de la Fase 1**: prueba de sesión en un dispositivo real.
 - **Proyecto nativo**: `android/` (Capacitor 8; los artefactos de build y los
   assets copiados no se versionan).
 - **APK de depuración en CI**: el flujo `Android`

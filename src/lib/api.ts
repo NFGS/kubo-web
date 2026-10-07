@@ -1,6 +1,21 @@
 import type { TokenResponse, TotpChallenge, TotpSetup, User } from './types';
 
-const BASE = '/api/v1';
+const DEFAULT_BASE = '/api/v1';
+
+/**
+ * Base del API. En la web es la ruta relativa (`/api/v1`, proxeada por nginx);
+ * en la app móvil (Capacitor) apunta al servidor del negocio configurado en el
+ * primer arranque (ADR-0031). El contrato no cambia: solo la base.
+ */
+let baseUrl = DEFAULT_BASE;
+
+export function setApiBase(serverUrl: string | null): void {
+  baseUrl = serverUrl ? `${serverUrl.replace(/\/+$/, '')}/api/v1` : DEFAULT_BASE;
+}
+
+export function apiBase(): string {
+  return baseUrl;
+}
 
 /**
  * El access token vive solo en memoria (15 minutos). El refresh token ya **no**
@@ -40,7 +55,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
-  return fetch(`${BASE}${path}`, { ...init, headers, credentials: 'same-origin' });
+  return fetch(`${baseUrl}${path}`, { ...init, headers, credentials: 'same-origin' });
 }
 
 async function parseError(response: Response): Promise<ApiError> {
@@ -63,7 +78,7 @@ export async function refreshSession(): Promise<boolean> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
-        const response = await fetch(`${BASE}/auth/refresh`, {
+        const response = await fetch(`${baseUrl}/auth/refresh`, {
           method: 'POST',
           credentials: 'same-origin'
         });
@@ -141,7 +156,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 }
 
 export async function login(email: string, password: string): Promise<TokenResponse | TotpChallenge> {
-  const response = await fetch(`${BASE}/auth/login`, {
+  const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'same-origin',
@@ -165,7 +180,7 @@ export async function login(email: string, password: string): Promise<TokenRespo
 
 /** Segundo paso del acceso: desafio + codigo a cambio de la sesion. */
 export async function verifyTotp(challengeToken: string, code: string): Promise<TokenResponse> {
-  const response = await fetch(`${BASE}/auth/totp/verify`, {
+  const response = await fetch(`${baseUrl}/auth/totp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'same-origin',
@@ -195,7 +210,7 @@ export function totpDisable(code: string): Promise<User> {
 
 /** Solicita el enlace de recuperacion. La respuesta no revela si el correo existe. */
 export async function requestPasswordReset(email: string): Promise<void> {
-  const response = await fetch(`${BASE}/auth/forgot-password`, {
+  const response = await fetch(`${baseUrl}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
@@ -207,7 +222,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
 /** Consume el token del enlace y cambia la contrasena. */
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const response = await fetch(`${BASE}/auth/reset-password`, {
+  const response = await fetch(`${baseUrl}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, newPassword })
@@ -219,7 +234,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${BASE}/auth/logout`, {
+    await fetch(`${baseUrl}/auth/logout`, {
       method: 'POST',
       credentials: 'same-origin'
     });

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Building2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Badge, Button, Card, ErrorNote, Field, Input } from '../components/ui';
+import { apiBase } from '../lib/api';
 
 /**
  * Panel de plataforma (F6.4, ADR-0025).
@@ -51,7 +52,8 @@ interface AuditEntry {
   createdAt: string;
 }
 
-const BASE = '/api/v1';
+// La base del API es dinámica: en web es relativa; en la app móvil apunta al
+// servidor del negocio (ADR-0031).
 
 export function PlatformPage() {
   const [token, setToken] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function PlatformPage() {
     if (init.body) {
       headers.set('Content-Type', 'application/json');
     }
-    return fetch(`${BASE}${path}`, { ...init, headers });
+    return fetch(`${apiBase()}${path}`, { ...init, headers });
   }
 
   async function cargar(): Promise<void> {
@@ -136,7 +138,7 @@ export function PlatformPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${BASE}/platform/auth/login`, {
+      const response = await fetch(`${apiBase()}/platform/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password })
@@ -159,7 +161,7 @@ export function PlatformPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${BASE}/platform/auth/totp`, {
+      const response = await fetch(`${apiBase()}/platform/auth/totp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ challengeToken: challenge, code: code.trim() })

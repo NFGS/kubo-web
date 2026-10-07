@@ -12,6 +12,13 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
   },
+  plugins: {
+    // HTTP nativo para el API: evita CORS y conserva la cookie de sesión en la
+    // app móvil sin cambiar el contrato (ADR-0031). En web no aplica.
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;
