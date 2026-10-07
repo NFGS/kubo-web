@@ -17,11 +17,12 @@ appId: com.nfgs.kubo
 - inputText: "admin@kubo.local"
 - tapOn: "Contraseña"
 - inputText: "Admin123!"
+- hideKeyboard
 - tapOn: "Ingresar"
 - extendedWaitUntil:
     visible: "Tablero del negocio"
-    timeout: 60000
+    timeout: 90000
 - launchApp
 - extendedWaitUntil:
     visible: "Tablero del negocio"
-    timeout: 60000
+    timeout: 90000

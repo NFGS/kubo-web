@@ -58,5 +58,23 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            export MAESTRO_CLI_NO_ANALYTICS=1
+            set +e
             adb install -r apk/app-debug.apk
             maestro test .maestro/sesion.yaml
+            RESULTADO=$?
+            if [ $RESULTADO -ne 0 ]; then
+              mkdir -p diagnostico
+              adb exec-out screencap -p > diagnostico/pantalla.png
+              adb logcat -d -t 800 > diagnostico/logcat.txt
+              adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+              adb pull /sdcard/ui.xml diagnostico/ui.xml
+              cp -r "$(ls -dt "$HOME"/.maestro/tests/* 2>/dev/null | head -1)" diagnostico/maestro 2>/dev/null
+            fi
+            exit $RESULTADO
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: diagnostico-emulador
+          path: diagnostico/
+          if-no-files-found: ignore
