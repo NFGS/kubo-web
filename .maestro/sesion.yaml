@@ -1,0 +1,27 @@
+appId: com.nfgs.kubo
+---
+# Fase 1 del plan movil (ADR-0031): prueba de sesion en emulador Android.
+#   1. Primer arranque: pantalla "Conecta tu negocio".
+#   2. Conexion al servidor con el boton de la demo publica.
+#   3. Ingreso real (admin@kubo.local) contra el servidor publico.
+#   4. Relanzamiento sin limpiar estado: la sesion debe restaurarse con la
+#      cookie httpOnly (prueba del HTTP nativo, CapacitorHttp).
+- launchApp:
+    clearState: true
+- assertVisible: "Conecta tu negocio"
+- tapOn: "Usar la demo pública"
+- extendedWaitUntil:
+    visible: "Ingresar"
+    timeout: 60000
+- tapOn: "Correo"
+- inputText: "admin@kubo.local"
+- tapOn: "Contraseña"
+- inputText: "Admin123!"
+- tapOn: "Ingresar"
+- extendedWaitUntil:
+    visible: "Tablero del negocio"
+    timeout: 60000
+- launchApp
+- extendedWaitUntil:
+    visible: "Tablero del negocio"
+    timeout: 60000
