@@ -92,6 +92,25 @@ src/
   en caché cuando no hay red.
 - Iconos normales y *maskable* para Android.
 
+## App Android (Capacitor)
+
+La PWA se envuelve con **Capacitor** para la app móvil (ADR-0023 y ADR-0031;
+plan por fases en `kubo-docs/14-plan-app-movil.md`):
+
+- **Assets locales**: la app abre sin red desde el primer arranque; el APK es
+  uno solo para todos los negocios (la URL del servidor se configura en el
+  dispositivo — siguiente tramo de la Fase 1).
+- **Proyecto nativo**: `android/` (Capacitor 8; los artefactos de build y los
+  assets copiados no se versionan).
+- **APK de depuración en CI**: el flujo `Android`
+  (`.github/workflows/android.yml`) compila y sube `app-debug.apk` como
+  artefacto en cada push a `main`, tag `v*` o ejecución manual.
+
+```bash
+npm run android:sync   # compila la web y copia los assets al proyecto Android
+npm run android:apk    # compila el APK de depuración (requiere SDK de Android)
+```
+
 ## Desarrollo
 
 ```bash
