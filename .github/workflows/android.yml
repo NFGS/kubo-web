@@ -64,12 +64,12 @@ jobs:
             maestro test .maestro/sesion.yaml
             RESULTADO=$?
             if [ $RESULTADO -ne 0 ]; then
-              mkdir -p diagnostico
-              adb exec-out screencap -p > diagnostico/pantalla.png
-              adb logcat -d -t 800 > diagnostico/logcat.txt
+              mkdir -p "$GITHUB_WORKSPACE/diagnostico"
+              adb exec-out screencap -p > "$GITHUB_WORKSPACE/diagnostico/pantalla.png"
+              adb logcat -d -t 800 > "$GITHUB_WORKSPACE/diagnostico/logcat.txt"
               adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-              adb pull /sdcard/ui.xml diagnostico/ui.xml
-              cp -r "$(ls -dt "$HOME"/.maestro/tests/* 2>/dev/null | head -1)" diagnostico/maestro 2>/dev/null
+              adb pull /sdcard/ui.xml "$GITHUB_WORKSPACE/diagnostico/ui.xml"
+              cp -r "$(ls -dt "$HOME"/.maestro/tests/* 2>/dev/null | head -1)" "$GITHUB_WORKSPACE/diagnostico/maestro" 2>/dev/null
             fi
             exit $RESULTADO
       - uses: actions/upload-artifact@v4
