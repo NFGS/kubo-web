@@ -103,10 +103,11 @@ plan por fases en `kubo-docs/14-plan-app-movil.md`):
   servidor del negocio (con botón para usar la demo) y las llamadas al API usan
   HTTP nativo (`CapacitorHttp`) para conservar la sesión sin CORS. En la web
   nada cambia: la base sigue siendo `/api/v1` relativa.
-- **Sesión verificada**: el flujo móvil corre en el emulador Android de CI con
-  Maestro (`.maestro/sesion.yaml`): primer arranque, conexión a la demo,
-  ingreso real y restauración de la sesión por cookie al relanzar. Instalar el
-  APK en un equipo físico queda como verificación opcional.
+- **Suite móvil verificada**: el emulador Android de CI corre con Maestro
+  (`.maestro/`): sesión (primer arranque, ingreso y restauración por cookie),
+  venta de POS, venta sin conexión a la cola local y sincronización al
+  reconectar (`e2e-android/run-sesion.sh`). Instalar el APK en un equipo
+  físico queda como verificación opcional.
 - **Proyecto nativo**: `android/` (Capacitor 8; los artefactos de build y los
   assets copiados no se versionan).
 - **APK de depuración en CI**: el flujo `Android`
