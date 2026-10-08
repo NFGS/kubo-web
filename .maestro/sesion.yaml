@@ -22,6 +22,8 @@ appId: com.nfgs.kubo
 - extendedWaitUntil:
     visible: "Tablero del negocio"
     timeout: 90000
+# Relanzamiento explicito: la sesion debe restaurarse con la cookie httpOnly.
+- stopApp
 - launchApp
 - extendedWaitUntil:
     visible: "Tablero del negocio"

@@ -37,8 +37,23 @@ correr() {
   fi
 }
 
+# El flujo de sesion es autocontenido (arranca con clearState): un reintento
+# absorbe los hipos del emulador sin enmascarar fallos de la app.
+correr_flexible() {
+  local flujo="$1"
+  echo "[movil] flujo: $flujo"
+  if ! maestro test "$flujo"; then
+    echo "[movil] reintento de $flujo (flujo autocontenido)"
+    if ! maestro test "$flujo"; then
+      echo "[movil] FALLO en $flujo (tras reintento)"
+      diagnostico
+      exit 1
+    fi
+  fi
+}
+
 adb install -r apk/app-debug.apk
-correr .maestro/sesion.yaml
+correr_flexible .maestro/sesion.yaml
 correr .maestro/venta.yaml
 
 echo "[movil] red fuera (wifi y datos)"
