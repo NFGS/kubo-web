@@ -12,12 +12,6 @@ appId: com.nfgs.kubo
     direction: UP
 - swipe:
     direction: UP
-- swipe:
-    direction: UP
-- swipe:
-    direction: UP
-- swipe:
-    direction: UP
 - extendedWaitUntil:
     notVisible: ".*esperando sincronización.*"
     timeout: 60000

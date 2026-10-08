@@ -253,6 +253,7 @@ export function PosPage() {
             <Input
               className="pl-9"
               placeholder="Buscar producto por nombre o código"
+              aria-label="Buscar producto"
               value={term}
               onChange={(event) => setTerm(event.target.value)}
             />
