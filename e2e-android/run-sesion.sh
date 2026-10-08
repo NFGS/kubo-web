@@ -68,6 +68,17 @@ adb shell cmd connectivity airplane-mode disable || true
 adb shell svc wifi enable || true
 adb shell svc data enable || true
 sleep 5
-correr .maestro/sincronizacion.yaml
+if ! maestro test .maestro/sincronizacion.yaml; then
+  echo "[movil] la cola no vacio a la primera; se re-dispara el evento online"
+  adb shell svc wifi disable || true
+  sleep 3
+  adb shell svc wifi enable || true
+  sleep 5
+  if ! maestro test .maestro/sincronizacion.yaml; then
+    echo "[movil] FALLO en .maestro/sincronizacion.yaml"
+    diagnostico
+    exit 1
+  fi
+fi
 
 echo "[movil] suite completa en verde"

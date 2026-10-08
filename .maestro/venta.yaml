@@ -38,6 +38,16 @@ appId: com.nfgs.kubo
 - swipe:
     direction: UP
 - tapOn: "Cobrar.*"
+# El tunel publico gratis a veces responde 502 en la primera peticion; la app
+# conserva el carrito y muestra el error, asi que se reintenta el cobro.
 - extendedWaitUntil:
-    visible: "Venta .* registrada"
-    timeout: 30000
+    visible: "Venta .* registrada|Error 502"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "Error 502"
+    commands:
+      - tapOn: "Cobrar.*"
+      - extendedWaitUntil:
+          visible: "Venta .* registrada"
+          timeout: 60000
