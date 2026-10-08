@@ -12,5 +12,5 @@ appId: com.nfgs.kubo
       text: "Cobrar.*"
     direction: DOWN
 - extendedWaitUntil:
-    notVisible: "esperando sincronización"
+    notVisible: ".*esperando sincronización.*"
     timeout: 60000

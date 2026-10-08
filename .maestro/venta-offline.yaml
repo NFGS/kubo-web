@@ -7,7 +7,7 @@ appId: com.nfgs.kubo
     timeout: 30000
 - scrollUntilVisible:
     element:
-      text: "Arroz 500 g"
+      text: "Arroz 500 g.*"
     direction: UP
 - tapOn: "Arroz 500 g"
 - scrollUntilVisible:
