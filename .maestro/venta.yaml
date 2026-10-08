@@ -1,10 +1,16 @@
 appId: com.nfgs.kubo
 ---
 # Venta de POS con conexion (Fase 1 del plan movil, ADR-0031).
-# Continua donde termino sesion.yaml: app abierta y sesion activa.
+# La pantalla del emulador es pequena: el menu lateral esta colapsado (se abre
+# con "Abrir menú") y el carrito queda debajo del catalogo (se navega con
+# scroll). Continua donde termino sesion.yaml: app abierta y sesion activa.
+- extendedWaitUntil:
+    visible: "Abrir menú"
+    timeout: 60000
+- tapOn: "Abrir menú"
 - extendedWaitUntil:
     visible: "Vender"
-    timeout: 60000
+    timeout: 15000
 - tapOn: "Vender"
 - extendedWaitUntil:
     visible: "Toca un producto.*"
@@ -14,6 +20,10 @@ appId: com.nfgs.kubo
       text: "Arroz 500 g"
     direction: DOWN
 - tapOn: "Arroz 500 g"
+- scrollUntilVisible:
+    element:
+      text: "Cobrar.*"
+    direction: DOWN
 - tapOn: "Cobrar.*"
 - extendedWaitUntil:
     visible: "Venta .* registrada"

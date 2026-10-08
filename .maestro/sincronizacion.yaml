@@ -5,6 +5,12 @@ appId: com.nfgs.kubo
 - extendedWaitUntil:
     visible: "En línea"
     timeout: 60000
+# Lleva la vista al carrito: si la venta siguiera pendiente, su aviso seria
+# visible aqui y la asercion de abajo fallaria (no un falso positivo).
+- scrollUntilVisible:
+    element:
+      text: "Cobrar.*"
+    direction: DOWN
 - extendedWaitUntil:
     notVisible: "esperando sincronización"
     timeout: 60000
