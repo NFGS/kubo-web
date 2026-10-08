@@ -1,16 +1,23 @@
 appId: com.nfgs.kubo
 ---
 # Al volver la conexion, la cola se vacia sola (evento online -> flush).
-# El script enciende wifi y datos antes de este flujo.
+# El script enciende wifi y datos antes de este flujo. Se baja al carrito
+# para que el aviso de pendientes seria visible si la cola no se vaciara.
 - extendedWaitUntil:
     visible: "En línea"
     timeout: 60000
-# Lleva la vista al carrito: si la venta siguiera pendiente, su aviso seria
-# visible aqui y la asercion de abajo fallaria (no un falso positivo).
-- scrollUntilVisible:
-    element:
-      text: "Cobrar.*"
-    direction: DOWN
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
 - extendedWaitUntil:
     notVisible: ".*esperando sincronización.*"
     timeout: 60000

@@ -1,19 +1,36 @@
 appId: com.nfgs.kubo
 ---
 # Venta sin conexion: la app la guarda en la cola local (P-12) y lo avisa.
-# El script apaga wifi y datos antes de este flujo; seguimos en el POS.
+# El script apaga wifi y datos antes de este flujo; venimos del final de la
+# pagina (carrito): se sube al catalogo para elegir y se baja a cobrar.
 - extendedWaitUntil:
     visible: "Sin internet"
     timeout: 30000
-- scrollUntilVisible:
-    element:
-      text: "Arroz 500 g.*"
-    direction: UP
-- tapOn: "Arroz 500 g.*"
-- scrollUntilVisible:
-    element:
-      text: "Cobrar.*"
+- swipe:
     direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- tapOn: "Arroz 500 g.*"
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
 - tapOn: "Cobrar.*"
 - extendedWaitUntil:
     visible: "Sin internet: la venta quedó en cola.*"
