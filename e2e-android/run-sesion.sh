@@ -56,15 +56,18 @@ adb install -r apk/app-debug.apk
 correr_flexible .maestro/sesion.yaml
 correr .maestro/venta.yaml
 
-echo "[movil] red fuera (wifi y datos)"
+echo "[movil] red fuera (modo avion + wifi/datos)"
+adb shell cmd connectivity airplane-mode enable || true
 adb shell svc wifi disable || true
 adb shell svc data disable || true
-sleep 3
+sleep 5
 correr .maestro/venta-offline.yaml
 
 echo "[movil] red de vuelta"
+adb shell cmd connectivity airplane-mode disable || true
 adb shell svc wifi enable || true
 adb shell svc data enable || true
+sleep 5
 correr .maestro/sincronizacion.yaml
 
 echo "[movil] suite completa en verde"
