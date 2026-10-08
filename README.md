@@ -139,6 +139,9 @@ código nunca necesita saber en qué puerto corre cada servicio.
   en blanco).
 - Mensajes en español pensados para alguien sin conocimientos técnicos.
 - Objetivos táctiles amplios para trabajar en el mostrador.
+- **Sistema de diseño**: paleta, tipografía y componentes documentados en
+  [`DESIGN.md`](./DESIGN.md) (navy estructural + azul royal de acento; Inter
+  self-hosted).
 
 ## Calidad y accesibilidad (Fase 2)
 
@@ -149,10 +152,11 @@ código nunca necesita saber en qué puerto corre cada servicio.
 - **Auditoría axe** en cada pantalla: el gate falla ante violaciones graves o
   críticas de WCAG 2 A/AA. La Fase 2 corrigió tres defectos reales (contrastes y
   un `select` sin nombre accesible).
-- **Pruebas unitarias (vitest)**: 29 pruebas sobre la cola offline
-  (IndexedDB), la política de errores, el formato es-CO, el sistema de diseño y
-  la pantalla de ingreso, con gate de cobertura v8: líneas/funciones/statements
-  ≥ 85 y ramas ≥ 65 (hoy líneas 100 %, ramas 91 %).
+- **Pruebas unitarias (vitest)**: 45 pruebas sobre la cola offline
+  (IndexedDB), la política de errores, el formato es-CO, el sistema de diseño
+  —con focus trap y Escape—, la pantalla de ingreso y el modo nativo (servidor
+  configurable y HTTP nativo), con gate de cobertura v8:
+  líneas/funciones/statements ≥ 85 y ramas ≥ 65 (hoy líneas 97.3 %, ramas 88 %).
 - **Contratos del consumidor (Pact)**: `src/pact/consumer.pact.test.ts` declara
   4 interacciones y `make pact` las verifica contra el sistema vivo; corre en
   `make ci`.
