@@ -1,10 +1,12 @@
 appId: com.nfgs.kubo
 ---
 # Venta de POS con conexion (Fase 1 del plan movil, ADR-0031).
-# La pantalla del emulador es pequena: el menu lateral esta colapsado (se abre
-# con "Abrir menú") y el carrito va despues del catalogo; el tope inferior
-# absorbe los deslizamientos extra aunque el catalogo crezca. Continua donde
-# termino sesion.yaml: app abierta y sesion activa.
+# Arranca con launchApp: si la app siguiera abierta se reinicia con la sesion
+# restaurada (cookie httpOnly) y si el sistema la cerro entre flujos, se
+# recupera aqui. La pantalla del emulador es pequena: el menu lateral esta
+# colapsado (se abre con "Abrir menú") y el carrito va despues del catalogo; el
+# tope inferior absorbe los deslizamientos extra aunque el catalogo crezca.
+- launchApp
 - extendedWaitUntil:
     visible: "Abrir menú"
     timeout: 60000

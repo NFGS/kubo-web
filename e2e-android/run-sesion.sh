@@ -27,29 +27,42 @@ diagnostico() {
   cp -r "$(ls -dt "$HOME"/.maestro/tests/* 2>/dev/null | head -1)" "$GITHUB_WORKSPACE/diagnostico/maestro" 2>/dev/null || true
 }
 
+# Guarda un logcat corto por flujo: si la app muere entre flujos, la ventana
+# del suceso queda capturada en el artefacto de diagnostico.
+capturar_log() {
+  mkdir -p "$GITHUB_WORKSPACE/diagnostico"
+  adb logcat -d -t 800 > "$GITHUB_WORKSPACE/diagnostico/logcat-$1.txt" || true
+}
+
 correr() {
-  local flujo="$1"
+  local flujo="$1" nombre
+  nombre=$(basename "$flujo" .yaml)
   echo "[movil] flujo: $flujo"
   if ! maestro test "$flujo"; then
     echo "[movil] FALLO en $flujo"
+    capturar_log "$nombre"
     diagnostico
     exit 1
   fi
+  capturar_log "$nombre"
 }
 
 # El flujo de sesion es autocontenido (arranca con clearState): un reintento
 # absorbe los hipos del emulador sin enmascarar fallos de la app.
 correr_flexible() {
-  local flujo="$1"
+  local flujo="$1" nombre
+  nombre=$(basename "$flujo" .yaml)
   echo "[movil] flujo: $flujo"
   if ! maestro test "$flujo"; then
     echo "[movil] reintento de $flujo (flujo autocontenido)"
     if ! maestro test "$flujo"; then
       echo "[movil] FALLO en $flujo (tras reintento)"
+      capturar_log "$nombre"
       diagnostico
       exit 1
     fi
   fi
+  capturar_log "$nombre"
 }
 
 adb install -r apk/app-debug.apk
@@ -96,9 +109,11 @@ if ! maestro test .maestro/sincronizacion.yaml; then
   sleep 5
   if ! maestro test .maestro/sincronizacion.yaml; then
     echo "[movil] FALLO en .maestro/sincronizacion.yaml"
+    capturar_log sincronizacion
     diagnostico
     exit 1
   fi
 fi
+capturar_log sincronizacion
 
 echo "[movil] suite completa en verde"
