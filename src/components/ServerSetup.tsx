@@ -44,7 +44,7 @@ export function ServerSetup({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-slate-100 p-4">
+    <div className="grid min-h-screen place-items-center bg-slate-50 p-4">
       <Card className="w-full max-w-md">
         <div className="mb-4 flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-kubo-100 text-kubo-700">

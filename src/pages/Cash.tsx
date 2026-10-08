@@ -96,9 +96,9 @@ export function CashPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Caja</h1>
-        <p className="text-sm text-slate-600">
+      <header className="rounded-2xl bg-ink-900 px-5 py-4">
+        <h1 className="text-lg font-bold text-white">Caja</h1>
+        <p className="mt-0.5 text-sm text-mist">
           Apertura con base, cierre con arqueo. Las ventas del turno se ligan a la sesión.
         </p>
       </header>
@@ -109,7 +109,7 @@ export function CashPage() {
         <Spinner label="Consultando la caja…" />
       ) : session === null ? (
         <Card>
-          <h2 className="mb-4 text-sm font-semibold tracking-wide text-slate-500 uppercase">
+          <h2 className="mb-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
             Abrir caja
           </h2>
           <form onSubmit={handleOpen} className="space-y-4">
@@ -132,7 +132,7 @@ export function CashPage() {
       ) : (
         <Card>
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
               Turno abierto
             </h2>
             <Badge tone="success">Abierta desde {dateTime(session.opened_at)}</Badge>
@@ -185,7 +185,7 @@ export function CashPage() {
       )}
 
       <Card>
-        <h2 className="mb-4 text-sm font-semibold tracking-wide text-slate-500 uppercase">Historial</h2>
+        <h2 className="mb-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Historial</h2>
         {history.isLoading ? (
           <Spinner label="Cargando turnos…" />
         ) : rows.length === 0 ? (
@@ -194,7 +194,7 @@ export function CashPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Apertura</th>
                   <th className="pb-3">Cierre</th>
                   <th className="pb-3 text-right">Base</th>
@@ -204,7 +204,7 @@ export function CashPage() {
                   <th className="pb-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {rows.map((row) => {
                   const difference = Number(row.difference ?? '0');
                   return (
@@ -216,7 +216,7 @@ export function CashPage() {
                       <td className="py-3 text-right text-slate-700">{money(row.counted_amount ?? 0)}</td>
                       <td className="py-3 text-right">
                         {row.status === 'CLOSED' ? (
-                          <span className={difference === 0 ? 'text-emerald-700' : 'text-rose-700'}>
+                          <span className={difference === 0 ? 'text-green-700' : 'text-red-700'}>
                             {money(difference)}
                           </span>
                         ) : (

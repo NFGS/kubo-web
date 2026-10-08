@@ -18,7 +18,7 @@ export function Card({
     <section className={clsx('card p-5', className)}>
       {(title || action) && (
         <header className="mb-4 flex items-center justify-between gap-3">
-          {title && <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase">{title}</h2>}
+          {title && <h2 className="text-xs font-semibold tracking-wider text-slate-500 uppercase">{title}</h2>}
           {action}
         </header>
       )}
@@ -29,11 +29,12 @@ export function Card({
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
+// Botones de la referencia: radio 12px, primario azul royal, peligro rojo.
 const buttonStyles: Record<ButtonVariant, string> = {
   primary: 'bg-kubo-600 text-white hover:bg-kubo-700 disabled:bg-kubo-300',
-  secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50',
-  ghost: 'text-slate-600 hover:bg-slate-100',
-  danger: 'bg-rose-600 text-white hover:bg-rose-700'
+  secondary: 'bg-white text-ink-700 border border-edge hover:bg-slate-50',
+  ghost: 'text-ink-700 hover:bg-slate-100',
+  danger: 'bg-red-600 text-white hover:bg-red-700'
 };
 
 export function Button({
@@ -71,7 +72,7 @@ export function Field({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-semibold tracking-wide text-slate-600 uppercase">{label}</span>
+      <span className="text-xs font-semibold tracking-wider text-slate-600 uppercase">{label}</span>
       {children}
       {hint && <span className="block text-xs text-slate-600">{hint}</span>}
     </label>
@@ -83,7 +84,7 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
     <input
       {...rest}
       className={clsx(
-        'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900',
+        'w-full rounded-xl border border-edge bg-white px-3.5 py-2.5 text-sm text-ink-900',
         'placeholder:text-slate-400 focus:border-kubo-500 focus:ring-2 focus:ring-kubo-100 focus:outline-none',
         className
       )}
@@ -96,7 +97,7 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
     <select
       {...rest}
       className={clsx(
-        'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900',
+        'w-full rounded-xl border border-edge bg-white px-3.5 py-2.5 text-sm text-ink-900',
         'focus:border-kubo-500 focus:ring-2 focus:ring-kubo-100 focus:outline-none',
         className
       )}
@@ -106,14 +107,19 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
   );
 }
 
-type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
+// Tonos aditivos: violet y pink llegan con la referencia visual (estados
+// "Suspendido" y etiquetas tipo "API error"). El texto de cada pastilla usa
+// el paso oscuro que sostiene contraste >= 4.5:1 (WCAG AA) sobre el pastel.
+type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'violet' | 'pink';
 
 const toneStyles: Record<Tone, string> = {
-  neutral: 'bg-slate-100 text-slate-600',
-  success: 'bg-emerald-100 text-emerald-700',
+  neutral: 'bg-slate-100 text-slate-700',
+  success: 'bg-green-100 text-green-700',
   warning: 'bg-amber-100 text-amber-700',
-  danger: 'bg-rose-100 text-rose-700',
-  info: 'bg-kubo-100 text-kubo-700'
+  danger: 'bg-red-100 text-red-700',
+  info: 'bg-kubo-100 text-kubo-700',
+  violet: 'bg-violet-100 text-violet-600',
+  pink: 'bg-pink-100 text-pink-700'
 };
 
 export function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: Tone }) {
@@ -221,7 +227,7 @@ export function Modal({
   }
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/50 p-0 sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -232,7 +238,7 @@ export function Modal({
         className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl"
       >
         <header className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -253,7 +259,7 @@ export function ErrorNote({ message }: { message: string | null }) {
     return null;
   }
   return (
-    <p role="alert" className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
+    <p role="alert" className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
       {message}
     </p>
   );

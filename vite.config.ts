@@ -16,8 +16,8 @@ export default defineConfig({
         description:
           'Gestiona clientes, inventario y ventas desde el local, incluso sin internet.',
         lang: 'es-CO',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#0b1220',
+        background_color: '#0b1220',
         display: 'standalone',
         orientation: 'any',
         start_url: '/',

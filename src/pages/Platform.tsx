@@ -276,13 +276,13 @@ export function PlatformPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-5xl space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
           <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold text-slate-900">
-              <ShieldCheck className="h-6 w-6 text-kubo-600" aria-hidden />
+            <h1 className="flex items-center gap-2 text-lg font-bold text-white">
+              <ShieldCheck className="h-6 w-6 text-kubo-300" aria-hidden />
               Panel de plataforma
             </h1>
-            <p className="text-sm text-slate-600">
+            <p className="mt-0.5 text-sm text-mist">
               Negocios, plan y estado. El operador no lee datos de negocio: solo los gestiona.
             </p>
           </div>
@@ -303,7 +303,7 @@ export function PlatformPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Negocio</th>
                   <th className="pb-3">Plan</th>
                   <th className="pb-3">Estado</th>
@@ -313,7 +313,7 @@ export function PlatformPage() {
                   <th className="pb-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {tenants.map((tenant) => (
                   <tr key={tenant.id} className="hover:bg-slate-50">
                     <td className="py-3">
@@ -328,7 +328,7 @@ export function PlatformPage() {
                       {tenant.status === 'ACTIVE' ? (
                         <Badge tone="success">Activo</Badge>
                       ) : (
-                        <Badge tone="warning">Suspendido</Badge>
+                        <Badge tone="violet">Suspendido</Badge>
                       )}
                     </td>
                     <td className="py-3 text-slate-700">
@@ -387,7 +387,7 @@ export function PlatformPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                  <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                     <th className="pb-3">Negocio</th>
                     <th className="pb-3">Plan</th>
                     <th className="pb-3">Monto</th>
@@ -395,7 +395,7 @@ export function PlatformPage() {
                     <th className="pb-3 text-right">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                   {payments.map((pago) => (
                     <tr key={pago.id} className="hover:bg-slate-50">
                       <td className="py-3 font-medium text-slate-800">{pago.tenantName}</td>

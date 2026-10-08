@@ -179,10 +179,10 @@ export function PurchasesPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Compras y proveedores</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-lg font-bold text-white">Compras y proveedores</h1>
+          <p className="mt-0.5 text-sm text-mist">
             {number(purchaseRows.length)} compra(s) · {number(supplierRows.length)} proveedor(es). Cada
             compra suma inventario y actualiza el costo.
           </p>
@@ -200,7 +200,7 @@ export function PurchasesPage() {
       </header>
 
       <Card>
-        <h2 className="mb-4 text-sm font-semibold tracking-wide text-slate-500 uppercase">Proveedores</h2>
+        <h2 className="mb-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Proveedores</h2>
         {suppliers.isLoading ? (
           <Spinner label="Cargando proveedores…" />
         ) : supplierRows.length === 0 ? (
@@ -212,14 +212,14 @@ export function PurchasesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Proveedor</th>
                   <th className="pb-3">NIT</th>
                   <th className="pb-3">Teléfono</th>
                   <th className="pb-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {supplierRows.map((supplier) => (
                   <tr key={supplier.id} className="hover:bg-slate-50">
                     <td className="py-3">
@@ -240,7 +240,7 @@ export function PurchasesPage() {
       </Card>
 
       <Card>
-        <h2 className="mb-4 text-sm font-semibold tracking-wide text-slate-500 uppercase">Compras</h2>
+        <h2 className="mb-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Compras</h2>
         {purchases.isLoading ? (
           <Spinner label="Cargando compras…" />
         ) : purchaseRows.length === 0 ? (
@@ -252,7 +252,7 @@ export function PurchasesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Compra</th>
                   <th className="pb-3">Proveedor</th>
                   <th className="pb-3">Fecha</th>
@@ -261,7 +261,7 @@ export function PurchasesPage() {
                   <th className="pb-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {purchaseRows.map((purchase) => (
                   <tr key={purchase.id} className="hover:bg-slate-50">
                     <td className="py-3">
@@ -285,7 +285,7 @@ export function PurchasesPage() {
                             type="button"
                             onClick={() => voidPurchase.mutate(purchase.id)}
                             aria-label={`Anular la compra ${purchase.number}`}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                           >
                             <Undo2 className="h-4 w-4" />
                           </button>
@@ -430,7 +430,7 @@ export function PurchasesPage() {
                   aria-label={`Quitar la línea ${index + 1}`}
                   onClick={() => setLines((current) => current.filter((_line, position) => position !== index))}
                   disabled={lines.length === 1}
-                  className="grid place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30"
+                  className="grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-red-600 disabled:opacity-30"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

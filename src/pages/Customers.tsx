@@ -144,10 +144,10 @@ export function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-lg font-bold text-white">Clientes</h1>
+          <p className="mt-0.5 text-sm text-mist">
             {number(total)} registros · el documento y el teléfono se guardan cifrados
           </p>
         </div>
@@ -196,7 +196,7 @@ export function CustomersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Cliente</th>
                   <th className="pb-3">Documento</th>
                   <th className="pb-3">Contacto</th>
@@ -205,7 +205,7 @@ export function CustomersPage() {
                   <th className="pb-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {rows.map((customer) => (
                   <tr key={customer.id} className="hover:bg-slate-50">
                     <td className="py-3">
@@ -237,7 +237,7 @@ export function CustomersPage() {
                           type="button"
                           onClick={() => remove.mutate(customer.id)}
                           aria-label={`Archivar ${customer.name}`}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

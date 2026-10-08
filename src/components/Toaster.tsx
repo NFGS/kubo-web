@@ -16,15 +16,16 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | null>(null);
 
+// Verdes y rojos de la referencia (no esmeralda/rosa).
 const toneStyles: Record<ToastTone, string> = {
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  error: 'border-rose-200 bg-rose-50 text-rose-800',
+  success: 'border-green-200 bg-green-50 text-green-800',
+  error: 'border-red-200 bg-red-50 text-red-800',
   info: 'border-slate-200 bg-white text-slate-700'
 };
 
 const toneIcons: Record<ToastTone, ReactNode> = {
-  success: <CheckCircle2 className="h-5 w-5 text-emerald-600" aria-hidden />,
-  error: <AlertTriangle className="h-5 w-5 text-rose-600" aria-hidden />,
+  success: <CheckCircle2 className="h-5 w-5 text-green-600" aria-hidden />,
+  error: <AlertTriangle className="h-5 w-5 text-red-600" aria-hidden />,
   info: <Info className="h-5 w-5 text-slate-500" aria-hidden />
 };
 

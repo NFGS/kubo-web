@@ -1,7 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   Cell,
@@ -21,7 +19,8 @@ import { useToast } from '../components/Toaster';
 import type { OverviewResponse } from '../lib/types';
 import { Badge, Button, Card, EmptyState, ErrorNote, Spinner } from '../components/ui';
 
-const PIE_COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
+// Donut pastel de la referencia: menta, azul, rosa, ambar y violeta claros.
+const PIE_COLORS = ['#a7f3d0', '#93c5fd', '#f9a8d4', '#fcd34d', '#c4b5fd'];
 
 interface TooltipEntry {
   value?: number | string;
@@ -43,7 +42,7 @@ function ChartTooltip({
   }
   const value = Number(payload[0]?.value ?? 0);
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-xl border border-edge bg-white px-3 py-2 text-xs shadow-lg">
       {label !== undefined && <p className="font-semibold text-slate-700">{shortDate(String(label))}</p>}
       <p className="text-slate-500">{isMoney ? money(value) : `${number(value)} unidades`}</p>
     </div>
@@ -65,7 +64,7 @@ function Kpi({
 }) {
   const toneClasses = {
     info: 'bg-kubo-100 text-kubo-700',
-    success: 'bg-emerald-100 text-emerald-700',
+    success: 'bg-green-100 text-green-700',
     warning: 'bg-amber-100 text-amber-700'
   } as const;
 
@@ -119,6 +118,18 @@ export function DashboardPage() {
   const rotationRows = data?.rotation ?? [];
   const customerStats = data?.customers;
 
+  // Centro del donut (referencia visual): cuota del medio de pago dominante.
+  const totalPagos = paymentRows.reduce((suma, fila) => suma + Number(fila.revenue), 0);
+  const pagoTop =
+    paymentRows.length > 0
+      ? paymentRows.reduce(
+          (top, fila) => (Number(fila.revenue) > Number(top.revenue) ? fila : top),
+          paymentRows[0]
+        )
+      : null;
+  const cuotaTop =
+    pagoTop && totalPagos > 0 ? Math.round((Number(pagoTop.revenue) / totalPagos) * 100) : 0;
+
   if (overview.isLoading) {
     return <Spinner label="Cargando el tablero…" />;
   }
@@ -137,10 +148,10 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Tablero del negocio</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-lg font-bold text-white">Tablero del negocio</h1>
+          <p className="mt-0.5 text-sm text-mist">
             Indicadores construidos a partir de los eventos de venta, en tiempo real.
           </p>
         </div>
@@ -198,34 +209,34 @@ export function DashboardPage() {
           ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesSeries}>
+                <BarChart data={salesSeries}>
                   <defs>
-                    <linearGradient id="kuboRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.02} />
+                    {/* Barra azul de la referencia: degradado vertical claro -> royal. */}
+                    <linearGradient id="kuboBarraAzul" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#93c5fd" />
+                      <stop offset="100%" stopColor="#2563eb" />
                     </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value: string) => shortDate(value)}
-                    stroke="#94a3b8"
+                    stroke="#64748b"
                     fontSize={12}
                   />
                   <YAxis
                     tickFormatter={(value: number) => compactMoney(value)}
-                    stroke="#94a3b8"
+                    stroke="#64748b"
                     fontSize={12}
                     width={70}
                   />
                   <Tooltip content={<ChartTooltip />} />
-                  <Area
-                    type="monotone"
+                  <Bar
                     dataKey="revenue"
-                    stroke="#4f46e5"
-                    strokeWidth={2.5}
-                    fill="url(#kuboRevenue)"
+                    fill="url(#kuboBarraAzul)"
+                    radius={[6, 6, 0, 0]}
+                    barSize={18}
                   />
-                </AreaChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           )}
@@ -236,7 +247,7 @@ export function DashboardPage() {
             <EmptyState title="Sin datos de pago" />
           ) : (
             <>
-              <div className="h-52">
+              <div className="relative h-52">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -254,6 +265,14 @@ export function DashboardPage() {
                     <Tooltip content={<ChartTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
+                {pagoTop && (
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-bold text-ink-900">{cuotaTop}%</span>
+                    <span className="max-w-16 truncate text-[10px] font-medium text-slate-500">
+                      {paymentLabels[pagoTop.payment_method] ?? pagoTop.payment_method}
+                    </span>
+                  </div>
+                )}
               </div>
               <ul className="mt-2 space-y-2 text-sm">
                 {paymentRows.map((row, index) => (
@@ -282,21 +301,28 @@ export function DashboardPage() {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={products} layout="vertical" margin={{ left: 12, right: 24 }}>
+                  <defs>
+                    {/* Serie verde de la referencia: degradado claro -> pleno. */}
+                    <linearGradient id="kuboBarraVerde" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#86efac" />
+                      <stop offset="100%" stopColor="#22c55e" />
+                    </linearGradient>
+                  </defs>
                   <XAxis
                     type="number"
                     tickFormatter={(value: number) => compactMoney(value)}
-                    stroke="#94a3b8"
+                    stroke="#64748b"
                     fontSize={12}
                   />
                   <YAxis
                     type="category"
                     dataKey="product_name"
-                    stroke="#94a3b8"
+                    stroke="#64748b"
                     fontSize={12}
                     width={140}
                   />
                   <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey="revenue" fill="#0ea5e9" radius={[0, 8, 8, 0]} barSize={18} />
+                  <Bar dataKey="revenue" fill="url(#kuboBarraVerde)" radius={[0, 8, 8, 0]} barSize={18} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -310,14 +336,14 @@ export function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                  <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                     <th className="pb-2">Número</th>
                     <th className="pb-2">Cliente</th>
                     <th className="pb-2">Fecha</th>
                     <th className="pb-2 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                   {recentSales.map((sale) => (
                     <tr key={sale.sale_id}>
                       <td className="py-2.5 font-medium text-slate-700">{sale.number}</td>

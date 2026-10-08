@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-100 p-6">
+      <div className="grid min-h-screen place-items-center bg-slate-50 p-6">
         <div className="card max-w-md space-y-4 p-8 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-amber-100 text-amber-700">
             <AlertTriangle className="h-6 w-6" aria-hidden />

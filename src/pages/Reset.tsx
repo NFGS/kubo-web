@@ -69,7 +69,7 @@ export function ResetPage() {
 
         {done ? (
           <div className="space-y-4">
-            <p className="rounded-xl bg-emerald-50 px-3.5 py-3 text-sm text-emerald-800">
+            <p className="rounded-xl bg-green-50 px-3.5 py-3 text-sm text-green-800">
               {token
                 ? 'Contraseña actualizada. Ya puedes ingresar con ella.'
                 : 'Si el correo está registrado, recibirás el enlace en unos minutos.'}

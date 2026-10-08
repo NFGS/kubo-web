@@ -78,8 +78,8 @@ export function LoginPage() {
             K
           </span>
           <div>
-            <p className="text-lg font-semibold text-white">Kubo</p>
-            <p className="text-xs text-slate-400">ERP + CRM para PYMES</p>
+            <p className="text-lg font-bold tracking-[0.2em] text-white uppercase">Kubo.</p>
+            <p className="text-xs text-mist">ERP + CRM para PYMES</p>
           </div>
         </div>
 

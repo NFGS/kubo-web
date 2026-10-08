@@ -90,10 +90,10 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Usuarios y roles</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-lg font-bold text-white">Usuarios y roles</h1>
+          <p className="mt-0.5 text-sm text-mist">
             Crea vendedores y administradores, cambia su rol o deshabilita su acceso.
           </p>
         </div>
@@ -128,14 +128,14 @@ export function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Usuario</th>
                   <th className="pb-3">Rol</th>
                   <th className="pb-3">Estado</th>
                   <th className="pb-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {rows.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50">
                     <td className="py-3">

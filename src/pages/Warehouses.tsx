@@ -104,9 +104,9 @@ export function WarehousesPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Bodegas y transferencias</h1>
-        <p className="text-sm text-slate-600">
+      <header className="rounded-2xl bg-ink-900 px-5 py-4">
+        <h1 className="text-lg font-bold text-white">Bodegas y transferencias</h1>
+        <p className="mt-0.5 text-sm text-mist">
           Mueve existencias entre tus bodegas o locales; el total del negocio no cambia.
         </p>
       </header>
@@ -137,7 +137,7 @@ export function WarehousesPage() {
                         type="button"
                         aria-label={`Borrar ${warehouse.name}`}
                         onClick={() => removeWarehouse.mutate(warehouse.id)}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+                         className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -262,7 +262,7 @@ export function WarehousesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs tracking-wide text-slate-500 uppercase">
+                <tr className="bg-periwinkle text-left text-xs font-semibold tracking-wider text-ink-800 uppercase [&>th]:px-3 [&>th]:py-2.5">
                   <th className="pb-3">Fecha</th>
                   <th className="pb-3">Desde</th>
                   <th className="pb-3">Hacia</th>
@@ -270,7 +270,7 @@ export function WarehousesPage() {
                   <th className="pb-3 text-right">Cantidad</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rowline [&>tr>td]:px-3">
                 {(transfers.data?.data ?? []).map((transfer) => (
                   <tr key={transfer.id} className="hover:bg-slate-50">
                     <td className="py-3 text-slate-600">

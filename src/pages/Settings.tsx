@@ -193,9 +193,9 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Configuración del negocio</h1>
-        <p className="text-sm text-slate-600">
+      <header className="rounded-2xl bg-ink-900 px-5 py-4">
+        <h1 className="text-lg font-bold text-white">Configuración del negocio</h1>
+        <p className="mt-0.5 text-sm text-mist">
           El vertical adapta la terminología y los valores por defecto; la zona horaria define el día
           comercial.
         </p>

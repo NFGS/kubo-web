@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { registerSW } from 'virtual:pwa-register';
+// Inter self-hosted (offline-first): el woff2 se empaqueta y precachea.
+import '@fontsource-variable/inter';
 import './index.css';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';

@@ -64,10 +64,10 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Documentos</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-lg font-bold text-white">Documentos</h1>
+          <p className="mt-0.5 text-sm text-mist">
             Facturas, notas crédito, comprobantes y soportes del negocio.
           </p>
         </div>

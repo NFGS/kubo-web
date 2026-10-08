@@ -51,20 +51,21 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-slate-50">
       <aside
         className={clsx(
           'fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-ink-900 px-4 py-6 text-slate-300 transition-transform lg:static lg:translate-x-0',
           menuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
+        {/* Wordmark de la referencia: blanco, bold, mayusculas y punto final. */}
         <div className="mb-8 flex items-center gap-3 px-2">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-kubo-600 text-lg font-bold text-white">
             K
           </span>
           <div>
-            <p className="text-base font-semibold text-white">Kubo</p>
-            <p className="text-xs text-slate-400">ERP + CRM</p>
+            <p className="text-base font-bold tracking-[0.2em] text-white uppercase">Kubo.</p>
+            <p className="text-xs text-mist">ERP + CRM</p>
           </div>
         </div>
 
@@ -77,28 +78,29 @@ export function Layout() {
               className={({ isActive }) =>
                 clsx(
                   'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                  isActive ? 'bg-kubo-600 text-white' : 'hover:bg-white/5 hover:text-white'
+                  // Item activo de la referencia: pastilla navy mas clara (no azul).
+                  isActive ? 'bg-ink-800 text-white' : 'text-mist hover:bg-ink-800/60 hover:text-white'
                 )
               }
             >
-              <item.icon className="h-5 w-5" aria-hidden />
+              <item.icon className="h-[18px] w-[18px]" aria-hidden />
               {item.label}
             </NavLink>
           ))}
         </nav>
 
         <div className="absolute inset-x-4 bottom-6 space-y-3">
-          <div className="rounded-xl bg-white/5 p-3 text-xs">
+          <div className="rounded-xl bg-ink-800 p-3 text-xs">
             <p className="font-semibold text-white">{user?.tenantName ?? 'Mi negocio'}</p>
-            <p className="mt-0.5 truncate text-slate-400">{user?.email}</p>
-            <p className="mt-1 text-slate-400">{user?.role}</p>
+            <p className="mt-0.5 truncate text-mist">{user?.email}</p>
+            <p className="mt-1 text-mist">{user?.role}</p>
           </div>
           <button
             type="button"
             onClick={() => void handleSignOut()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/5 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-mist hover:bg-ink-800/60 hover:text-white"
           >
-            <LogOut className="h-5 w-5" aria-hidden />
+            <LogOut className="h-[18px] w-[18px]" aria-hidden />
             Cerrar sesión
           </button>
         </div>
@@ -108,13 +110,13 @@ export function Layout() {
         <button
           type="button"
           aria-label="Cerrar menú"
-          className="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+          className="fixed inset-0 z-30 bg-ink-900/40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:px-8">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-edge bg-white/90 px-4 py-3 backdrop-blur lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"

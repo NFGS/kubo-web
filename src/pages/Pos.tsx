@@ -231,10 +231,10 @@ export function PosPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
       <div className="space-y-4">
-        <header className="flex flex-wrap items-end justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900 px-5 py-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Punto de venta</h1>
-            <p className="text-sm text-slate-600">
+            <h1 className="text-lg font-bold text-white">Punto de venta</h1>
+            <p className="mt-0.5 text-sm text-mist">
               Toca un producto para agregarlo al carrito. El inventario se descuenta al cobrar.
             </p>
           </div>
@@ -297,7 +297,7 @@ export function PosPage() {
           <ErrorNote message={error} />
 
           {lastSale && (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-800">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 px-3.5 py-3 text-sm text-green-800">
               <span>
                 Última venta: <strong>{lastSale.number}</strong> por {money(lastSale.total)} (
                 {paymentLabels[lastSale.payment_method] ?? lastSale.payment_method})
@@ -361,7 +361,7 @@ export function PosPage() {
                       type="button"
                       aria-label={`Quitar ${line.product.name}`}
                       onClick={() => setCart((current) => current.filter((row) => row.product.id !== line.product.id))}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
