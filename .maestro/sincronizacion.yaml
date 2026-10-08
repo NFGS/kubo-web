@@ -1,0 +1,10 @@
+appId: com.nfgs.kubo
+---
+# Al volver la conexion, la cola se vacia sola (evento online -> flush).
+# El script enciende wifi y datos antes de este flujo.
+- extendedWaitUntil:
+    visible: "En línea"
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible: "esperando sincronización"
+    timeout: 60000

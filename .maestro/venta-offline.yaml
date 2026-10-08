@@ -1,0 +1,17 @@
+appId: com.nfgs.kubo
+---
+# Venta sin conexion: la app la guarda en la cola local (P-12) y lo avisa.
+# El script apaga wifi y datos antes de este flujo.
+- extendedWaitUntil:
+    visible: "Sin internet"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Arroz 500 g"
+    direction: DOWN
+- tapOn: "Arroz 500 g"
+- tapOn: "Cobrar.*"
+- extendedWaitUntil:
+    visible: "Sin internet: la venta quedó en cola.*"
+    timeout: 30000
+- assertVisible: "1 venta(s) esperando sincronización"

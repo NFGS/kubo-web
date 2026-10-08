@@ -1,0 +1,20 @@
+appId: com.nfgs.kubo
+---
+# Venta de POS con conexion (Fase 1 del plan movil, ADR-0031).
+# Continua donde termino sesion.yaml: app abierta y sesion activa.
+- extendedWaitUntil:
+    visible: "Vender"
+    timeout: 60000
+- tapOn: "Vender"
+- extendedWaitUntil:
+    visible: "Toca un producto.*"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Arroz 500 g"
+    direction: DOWN
+- tapOn: "Arroz 500 g"
+- tapOn: "Cobrar.*"
+- extendedWaitUntil:
+    visible: "Venta .* registrada"
+    timeout: 30000

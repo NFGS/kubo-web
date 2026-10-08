@@ -31,7 +31,7 @@ jobs:
           if-no-files-found: error
 
   sesion:
-    name: Sesion en emulador (Maestro)
+    name: Suite movil en emulador (Maestro)
     needs: apk
     runs-on: ubuntu-latest
     timeout-minutes: 30
