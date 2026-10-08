@@ -1,8 +1,8 @@
 appId: com.nfgs.kubo
 ---
 # Venta sin conexion: la app la guarda en la cola local (P-12) y lo avisa.
-# El script apaga wifi y datos antes de este flujo; el filtro "Arroz" sigue
-# puesto y la pagina es corta.
+# El script apaga wifi y datos antes de este flujo; venimos del final de la
+# pagina (carrito): se sube al catalogo para elegir y se baja a cobrar.
 - extendedWaitUntil:
     visible: "Sin internet"
     timeout: 30000
@@ -12,7 +12,27 @@ appId: com.nfgs.kubo
     direction: DOWN
 - swipe:
     direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
 - tapOn: "Arroz 500 g.*"
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
 - swipe:
     direction: UP
 - swipe:
