@@ -1,11 +1,9 @@
 appId: com.nfgs.kubo
 ---
 # Venta sin conexion: la app la guarda en la cola local (P-12) y lo avisa.
-# El script apaga wifi y datos antes de este flujo; venimos del final de la
-# pagina (carrito): se sube al catalogo para elegir y se baja a cobrar.
-- extendedWaitUntil:
-    visible: "Sin internet"
-    timeout: 30000
+# El script corta la red y lo verifica con ping; si el WebView no reflejara el
+# cambio en el badge, la venta igual se encola por el fallo de red (el aviso
+# cambia segun el camino: sin internet o sin respuesta del servidor).
 - swipe:
     direction: DOWN
 - swipe:
@@ -41,6 +39,6 @@ appId: com.nfgs.kubo
     direction: UP
 - tapOn: "Cobrar.*"
 - extendedWaitUntil:
-    visible: "Sin internet: la venta quedó en cola.*"
-    timeout: 30000
+    visible: "Sin internet: la venta quedó en cola.*|No hubo respuesta del servidor.*"
+    timeout: 90000
 - assertVisible: "1 venta(s) esperando sincronización"

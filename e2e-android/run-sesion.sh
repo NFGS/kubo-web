@@ -56,18 +56,38 @@ adb install -r apk/app-debug.apk
 correr_flexible .maestro/sesion.yaml
 correr .maestro/venta.yaml
 
-echo "[movil] red fuera (modo avion + wifi/datos)"
+echo "[movil] red fuera (modo avion + wifi/datos + enlace abajo)"
+adb root >/dev/null 2>&1 || true
+sleep 2
 adb shell cmd connectivity airplane-mode enable || true
 adb shell svc wifi disable || true
 adb shell svc data disable || true
-sleep 5
+IFACE=$(adb shell "ip -o link show" 2>/dev/null | sed -n 's/^[0-9]*: \([^:]*\):.*/\1/p' | grep -v '^lo$' | head -1)
+if [ -n "$IFACE" ]; then adb shell "ip link set $IFACE down" || true; fi
+sleep 3
+for i in 1 2 3 4 5; do
+  if ! adb shell ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1; then
+    echo "[movil] sin conectividad confirmada"
+    break
+  fi
+  echo "[movil] aun hay red (intento $i)"
+  sleep 2
+done
 correr .maestro/venta-offline.yaml
 
 echo "[movil] red de vuelta"
+if [ -n "$IFACE" ]; then adb shell "ip link set $IFACE up" || true; fi
 adb shell cmd connectivity airplane-mode disable || true
 adb shell svc wifi enable || true
 adb shell svc data enable || true
 sleep 5
+for i in 1 2 3 4 5; do
+  if adb shell ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1; then
+    echo "[movil] conectividad restaurada"
+    break
+  fi
+  sleep 2
+done
 if ! maestro test .maestro/sincronizacion.yaml; then
   echo "[movil] la cola no vacio a la primera; se re-dispara el evento online"
   adb shell svc wifi disable || true
