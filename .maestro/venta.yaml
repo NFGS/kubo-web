@@ -19,7 +19,7 @@ appId: com.nfgs.kubo
     element:
       text: "Arroz 500 g.*"
     direction: DOWN
-- tapOn: "Arroz 500 g"
+- tapOn: "Arroz 500 g.*"
 - scrollUntilVisible:
     element:
       text: "Cobrar.*"
